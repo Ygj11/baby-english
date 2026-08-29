@@ -37,7 +37,16 @@ pipecat init --help
 不要猜 CLI flags。
 
 Pipecat 官方当前也推荐 coding agents 使用 Pipecat Context Hub。
-如果本机环境允许，Task 002 应安装并初始化 Context Hub，让 Codex 查询当前 Pipecat docs/examples/API，而不是依赖模型旧知识。
+如果本机已经安装，则 Task 002 直接使用；索引未完成不阻塞 Task 002。
+
+本项目已经有自己的母仓库和 `AGENTS.md`，因此不要在 `baby-english` 根目录执行：
+
+```bash
+pipecat init .
+```
+
+Task 002 只把 `pipecat-ai` 作为项目 dependency 接入。
+如确实需要观察 Pipecat 官方 scaffold，只能在 repo 外临时目录按需生成。
 
 ## 4. Node
 

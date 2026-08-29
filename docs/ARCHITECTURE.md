@@ -155,30 +155,58 @@ TTS_PROVIDER=
 
 ## 8. 第一阶段 Voice 模式
 
-MVP：
+MVP 使用 Batch Push-to-Talk：
 
 ```text
-Push to Talk
+微信小程序 RecorderManager
 ↓
-完整一句
+录完一句
 ↓
-STT
+HTTP upload
 ↓
-Tutor
+STTGateway
 ↓
-LLM
+Tutor / LLM
 ↓
-TTS
+TTSGateway
 ↓
-播放
+音频返回
+↓
+小程序播放
 ```
 
-暂不要求：
+这条路径优先验证：
 
-- full duplex
+- 儿童是否愿意开口
+- STT 是否够准
+- Tutor 回答是否合适
+- TTS 是否自然
+- 整体延迟是否可接受
+
+MVP 不要求为了使用 Pipecat 而把 batch 文件请求转换成 realtime frames。
+
+后续 realtime voice 再进入：
+
+```text
+MiniProgram realtime transport
+↓
+Pipecat transport
+↓
+Pipecat frame pipeline
+↓
+STT → Tutor/LLM → TTS
+```
+
+Realtime 阶段再处理：
+
+- streaming
+- continuous conversation
 - barge-in
-- WebRTC
-- continuous realtime conversation
+- realtime turn-taking
+- WebSocket / WebRTC compatibility
+
+Tasks 009–010 只证明 Batch Voice Loop，不代表 realtime voice 已完成。
+
 
 ## 9. RAG
 

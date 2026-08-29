@@ -85,3 +85,16 @@ commit / PR
 目标不是“代码全是自己的”，而是：
 
 > 产品逻辑自己掌握，基础设施尽可能来自成熟开源生态。
+
+## 本地启动
+
+```bash
+uv sync
+uv run uvicorn server.app.main:app --reload
+```
+
+Pipecat 作为当前项目的 core dependency 管理，不使用 scaffold 重建项目。验证安装：
+
+```bash
+uv run python -c "import pipecat; print('pipecat import ok')"
+```
