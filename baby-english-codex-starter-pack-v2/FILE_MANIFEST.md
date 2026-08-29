@@ -1,0 +1,30 @@
+# FILE_MANIFEST.md
+
+V2 审计修订版包含：
+
+- `AGENTS.md`
+- `FILE_MANIFEST.md`
+- `README.md`
+- `THIRD_PARTY_NOTICES.md`
+- `docs/API_CONTRACT.md`
+- `docs/ARCHITECTURE.md`
+- `docs/AUDIT.md`
+- `docs/DATA_MODEL.md`
+- `docs/OPEN_SOURCE_POLICY.md`
+- `docs/PRIVACY_SECURITY.md`
+- `docs/PRODUCT.md`
+- `docs/PROVIDER_STRATEGY.md`
+- `docs/ROADMAP.md`
+- `docs/SETUP.md`
+- `docs/TEST_PLAN.md`
+- `docs/UX_UI.md`
+- `tasks/001-bootstrap-repository.md`
+- `tasks/002-pipecat-foundation.md`
+- `tasks/003-miniprogram-init.md`
+- `tasks/004-tdesign-ui-foundation.md`
+- `tasks/005-api-client-health.md`
+- `tasks/006-text-chat-mvp.md`
+- `tasks/007-child-tutor.md`
+- `tasks/008-recorder-ui.md`
+- `tasks/009-audio-upload-stt.md`
+- `tasks/010-voice-loop.md`
