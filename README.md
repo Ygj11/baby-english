@@ -98,3 +98,13 @@ Pipecat 作为当前项目的 core dependency 管理，不使用 scaffold 重建
 ```bash
 uv run python -c "import pipecat; print('pipecat import ok')"
 ```
+
+## 微信开发者工具
+
+首次打开小程序前，复制本地项目配置：
+
+```bash
+cp miniprogram/project.config.json.example miniprogram/project.config.json
+```
+
+然后在微信开发者工具中导入 `miniprogram/` 目录。示例配置使用 `touristappid`，真实 AppID 只填写在已被 Git 忽略的 `project.config.json` 中。

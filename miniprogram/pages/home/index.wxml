@@ -1,0 +1,18 @@
+<view class="page">
+  <view class="hero">
+    <text class="eyebrow">Baby English</text>
+    <text class="title">Hi！今天想学什么？</text>
+    <text class="subtitle">选一个开始吧</text>
+  </view>
+
+  <view class="entry-list">
+    <view
+      wx:for="{{entries}}"
+      wx:key="id"
+      class="entry"
+    >
+      <text class="entry-icon">{{item.icon}}</text>
+      <text class="entry-label">{{item.label}}</text>
+    </view>
+  </view>
+</view>

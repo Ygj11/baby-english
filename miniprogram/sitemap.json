@@ -1,0 +1,9 @@
+{
+  "desc": "Baby English MiniProgram sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

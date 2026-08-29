@@ -1,0 +1,13 @@
+{
+  "description": "Baby English MiniProgram",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "projectname": "baby-english",
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "checkSiteMap": true
+  }
+}
