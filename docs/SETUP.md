@@ -99,16 +99,19 @@ npm install
 ```text
 APP_ENV=development
 
-LLM_PROVIDER=
-LLM_API_KEY=
-LLM_MODEL=
+DASHSCOPE_API_KEY=
+DASHSCOPE_WORKSPACE_ID=
+DASHSCOPE_REGION=cn-beijing
 
-STT_PROVIDER=
-STT_API_KEY=
+LLM_PROVIDER=qwen
+LLM_MODEL=qwen3.7-flash
 
-TTS_PROVIDER=
-TTS_API_KEY=
-TTS_VOICE=
+STT_PROVIDER=qwen_audio
+STT_MODEL=qwen-audio-3.0-asr-flash
+
+TTS_PROVIDER=qwen_audio
+TTS_MODEL=qwen-audio-3.0-tts-flash
+TTS_VOICE=longanhuan_v3.6
 
 WECHAT_APP_ID=
 WECHAT_APP_SECRET=
@@ -137,6 +140,20 @@ DATABASE_URL=
 不要把生产 secret 粘进 Codex task。
 
 真实 integration test 通过本地 `.env` 提供。
+
+启动真实 Qwen 配置 Backend：
+
+```bash
+uv run --env-file .env uvicorn server.app.main:app --reload
+```
+
+真实 Provider tests 必须显式 opt-in，并使用 repo 外的本地音频：
+
+```bash
+RUN_REAL_PROVIDER_TESTS=1 \
+REAL_STT_AUDIO_PATH=/tmp/baby-english-stt-test.wav \
+uv run --env-file .env pytest -m real_provider
+```
 
 
 ## 10. WeChat Developer Tool Local API

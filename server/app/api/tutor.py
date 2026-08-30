@@ -1,5 +1,6 @@
 """Tutor chat API."""
 
+import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,6 +11,7 @@ from server.app.tutor.schemas import EnglishLevel, StudentProfile
 from server.app.tutor.service import TutorService
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
+logger = logging.getLogger("uvicorn.error.baby_english.tutor")
 
 
 class StudentInput(BaseModel):
@@ -44,7 +46,11 @@ class ChatResponse(BaseModel):
 def get_tutor_service() -> TutorService:
     try:
         return TutorService(llm=create_llm())
-    except LLMConfigurationError:
+    except LLMConfigurationError as error:
+        logger.warning(
+            "provider_failure stage=llm category=configuration exception=%s",
+            type(error).__name__,
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Tutor is temporarily unavailable.",
@@ -65,7 +71,11 @@ async def chat(
                 english_level=request.student.english_level,
             ),
         )
-    except LLMError:
+    except LLMError as error:
+        logger.warning(
+            "provider_failure stage=llm category=request exception=%s",
+            type(error).__name__,
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Tutor is temporarily unavailable.",

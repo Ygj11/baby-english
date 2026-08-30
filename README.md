@@ -93,6 +93,12 @@ uv sync
 uv run uvicorn server.app.main:app --reload
 ```
 
+使用本地 `.env` 中的真实 Qwen Provider 配置启动：
+
+```bash
+uv run --env-file .env uvicorn server.app.main:app --reload
+```
+
 Pipecat 作为当前项目的 core dependency 管理，不使用 scaffold 重建项目。验证安装：
 
 ```bash

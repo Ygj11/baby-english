@@ -1,12 +1,17 @@
 """Batch TTS gateway boundary."""
 
+import asyncio
 import io
 import os
+import re
+import threading
 import wave
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 import httpx
+import dashscope
+from dashscope.audio.tts_v2 import AudioFormat, SpeechSynthesizer
 
 from server.app.provider_environment import (
     ProviderEnvironmentError,
@@ -120,6 +125,58 @@ class MiniMaxTTS:
         )
 
 
+_dashscope_configuration_lock = threading.Lock()
+
+
+@dataclass(slots=True)
+class QwenAudioTTS:
+    """Thin async adapter over DashScope's official Qwen Audio TTS SDK."""
+
+    websocket_url: str
+    workspace_id: str
+    api_key: str = field(repr=False)
+    model: str
+    voice: str = "longanhuan_v3.6"
+    speed: float = 0.9
+    timeout: float = 60.0
+    synthesizer_factory: Any = field(default=SpeechSynthesizer, repr=False)
+
+    async def synthesize(self, text: str) -> SynthesizedAudio:
+        try:
+            audio_data = await asyncio.to_thread(self._synthesize_sync, text)
+        except Exception as error:
+            raise TTSError("The TTS provider request failed.") from error
+
+        if not isinstance(audio_data, bytes) or not audio_data:
+            raise TTSError("The TTS provider returned empty audio.")
+        return SynthesizedAudio(
+            data=audio_data,
+            content_type="audio/mpeg",
+            extension=".mp3",
+        )
+
+    def _synthesize_sync(self, text: str) -> bytes:
+        with _dashscope_configuration_lock:
+            previous_api_key = dashscope.api_key
+            try:
+                dashscope.api_key = self.api_key
+                synthesizer = self.synthesizer_factory(
+                    model=self.model,
+                    voice=self.voice,
+                    format=AudioFormat.MP3_24000HZ_MONO_256KBPS,
+                    speech_rate=self.speed,
+                    workspace=self.workspace_id,
+                    url=self.websocket_url,
+                )
+            finally:
+                dashscope.api_key = previous_api_key
+
+        return synthesizer.call(
+            text,
+            timeout_millis=round(self.timeout * 1000),
+        )
+
+
 def create_tts(provider: str | None = None) -> TTSGateway:
     """Create the configured batch TTS adapter without choosing a vendor."""
     selected_provider = provider
@@ -145,7 +202,32 @@ def create_tts(provider: str | None = None) -> TTSGateway:
             timeout=_positive_float_environment("TTS_TIMEOUT", default=60.0),
         )
 
+    if normalized_provider == "qwen_audio":
+        workspace_id = _required_environment("DASHSCOPE_WORKSPACE_ID")
+        region = os.getenv("DASHSCOPE_REGION", "cn-beijing").strip()
+        return QwenAudioTTS(
+            websocket_url=build_qwen_tts_websocket_url(workspace_id, region),
+            workspace_id=workspace_id,
+            api_key=_required_environment("DASHSCOPE_API_KEY"),
+            model=_required_environment("TTS_MODEL"),
+            voice=os.getenv("TTS_VOICE", "longanhuan_v3.6").strip()
+            or "longanhuan_v3.6",
+            speed=_positive_float_environment("TTS_SPEED", default=0.9),
+            timeout=_positive_float_environment("TTS_TIMEOUT", default=60.0),
+        )
+
     raise TTSConfigurationError("The configured TTS provider is unavailable.")
+
+
+def build_qwen_tts_websocket_url(workspace_id: str, region: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9-]+", workspace_id):
+        raise TTSConfigurationError("DASHSCOPE_WORKSPACE_ID is invalid.")
+    if not re.fullmatch(r"[a-z0-9-]+", region):
+        raise TTSConfigurationError("DASHSCOPE_REGION is invalid.")
+    return (
+        f"wss://{workspace_id}.{region}.maas.aliyuncs.com"
+        "/api-ws/v1/inference"
+    )
 
 
 def _required_environment(name: str) -> str:

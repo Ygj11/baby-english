@@ -1,5 +1,7 @@
 """Batch voice HTTP endpoints."""
 
+import logging
+from time import perf_counter
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
@@ -31,6 +33,7 @@ from server.app.voice.tts import (
 )
 
 router = APIRouter(prefix="/api/voice", tags=["voice"])
+logger = logging.getLogger("uvicorn.error.baby_english.voice")
 
 
 class TranscriptionResponse(BaseModel):
@@ -51,7 +54,8 @@ media_store = TemporaryMediaStore()
 def get_stt_gateway() -> STTGateway:
     try:
         return create_stt()
-    except STTConfigurationError:
+    except STTConfigurationError as error:
+        _log_provider_failure("stt", "configuration", error)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Speech recognition is temporarily unavailable.",
@@ -61,7 +65,8 @@ def get_stt_gateway() -> STTGateway:
 def get_tts_gateway() -> TTSGateway:
     try:
         return create_tts()
-    except TTSConfigurationError:
+    except TTSConfigurationError as error:
+        _log_provider_failure("tts", "configuration", error)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Voice tutor is temporarily unavailable.",
@@ -95,7 +100,8 @@ async def transcribe(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="The audio file is too large.",
         ) from None
-    except STTError:
+    except STTError as error:
+        _log_provider_failure("stt", "request", error)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Speech recognition is temporarily unavailable.",
@@ -118,16 +124,28 @@ async def voice_turn(
     tts: Annotated[TTSGateway, Depends(get_tts_gateway)],
     store: Annotated[TemporaryMediaStore, Depends(get_media_store)],
 ) -> VoiceTurnResponse:
+    total_started = perf_counter()
+    stage = "stt"
     try:
         async with temporary_audio(file) as audio:
+            stage_started = perf_counter()
             transcription = await stt.transcribe(audio.path)
+            stt_ms = _elapsed_ms(stage_started)
+
+            stage = "llm"
+            stage_started = perf_counter()
             student = StudentProfile(
                 age=age,
                 grade=grade,
                 english_level=english_level,
             )
             reply = await tutor.reply(transcription.text, student)
+            llm_ms = _elapsed_ms(stage_started)
+
+            stage = "tts"
+            stage_started = perf_counter()
             synthesized = await tts.synthesize(reply)
+            tts_ms = _elapsed_ms(stage_started)
             media_id = store.save(synthesized)
     except EmptyAudioError:
         raise HTTPException(
@@ -144,11 +162,21 @@ async def voice_turn(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="The audio file is too large.",
         ) from None
-    except (STTError, LLMError, TTSError):
+    except (STTError, LLMError, TTSError) as error:
+        _log_provider_failure(stage, "request", error)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Voice tutor is temporarily unavailable.",
         ) from None
+
+    total_ms = _elapsed_ms(total_started)
+    logger.info(
+        "voice_turn_latency stt_ms=%d llm_ms=%d tts_ms=%d total_ms=%d",
+        stt_ms,
+        llm_ms,
+        tts_ms,
+        total_ms,
+    )
 
     return VoiceTurnResponse(
         transcript=transcription.text,
@@ -174,4 +202,17 @@ async def voice_media(
         path=asset.path,
         media_type=asset.content_type,
         headers={"Cache-Control": "private, max-age=300"},
+    )
+
+
+def _elapsed_ms(started: float) -> int:
+    return round((perf_counter() - started) * 1000)
+
+
+def _log_provider_failure(stage: str, category: str, error: Exception) -> None:
+    logger.warning(
+        "provider_failure stage=%s category=%s exception=%s",
+        stage,
+        category,
+        type(error).__name__,
     )

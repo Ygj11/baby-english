@@ -84,12 +84,14 @@ class CountingLLM:
 
 
 @pytest.mark.asyncio
-async def test_provider_failure_returns_safe_error() -> None:
+async def test_provider_failure_returns_safe_error(caplog: pytest.LogCaptureFixture) -> None:
     response = await post_chat(TutorService(llm=FailingLLM()))
 
     assert response.status_code == 503
     assert response.json() == {"detail": "Tutor is temporarily unavailable."}
     assert "provider raw error" not in response.text
+    assert "stage=llm" in caplog.text
+    assert "provider raw error" not in caplog.text
 
 
 @pytest.mark.asyncio

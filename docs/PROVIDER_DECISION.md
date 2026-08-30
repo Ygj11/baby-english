@@ -4,35 +4,43 @@
 
 除非 repository owner 明确要求，Codex 不得自行替换模型或厂商。
 
-## 1. LLM — DeepSeek
+## 1. 默认共享配置 — Alibaba Cloud Model Studio
 
-使用 OpenAI-compatible API。
-
-真实开发环境：
+Qwen LLM、STT、TTS 共用 owner 的北京 Workspace：
 
 ```env
-LLM_PROVIDER=openai_compatible
-
-OPENAI_API_KEY=
-OPENAI_BASE_URL=https://api.deepseek.com
-OPENAI_MODEL=deepseek-v4-pro
-OPENAI_TIMEOUT=1800
+DASHSCOPE_API_KEY=
+DASHSCOPE_WORKSPACE_ID=
+DASHSCOPE_REGION=cn-beijing
 ```
 
-说明：
-
-- `OPENAI_TIMEOUT=1800` 是 repository owner 当前明确指定值。
-- Codex 不得自行改成 60/90/其他值。
-- `.env.example` 只能保留空 Key，不得写真实 Key。
-- `deepseek-v4-pro` 使用 DeepSeek 当前兼容 OpenAI API 的模型名。
-
-官方参考：
-
-- https://api-docs.deepseek.com/
+Key 和 Workspace ID 只存在本地 `.env`，不得写入源码、测试、日志或文档。
 
 ---
 
-## 2. STT — Alibaba Cloud Model Studio
+## 2. 默认 LLM — Qwen
+
+```env
+LLM_PROVIDER=qwen
+LLM_MODEL=qwen3.7-flash
+LLM_TIMEOUT=60
+```
+
+通过 Workspace 专属 OpenAI-compatible endpoint 调用：
+
+```text
+https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+```
+
+DeepSeek `deepseek-v4-pro` adapter 保留，定位为未来高级/复杂任务模型；当前不做自动路由、fallback 或 A/B。
+
+官方参考：
+
+- https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions
+
+---
+
+## 3. 默认 STT — Qwen Audio
 
 第一版 Batch STT：
 
@@ -71,47 +79,38 @@ https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/api/v1/services/aigc/multimod
 
 ---
 
-## 3. TTS — MiniMax
-
-第一版 Batch TTS：
+## 4. 默认 TTS — Qwen Audio
 
 ```env
-TTS_PROVIDER=minimax
-
-MINIMAX_API_KEY=
-MINIMAX_BASE_URL=https://api.minimaxi.com/v1/t2a_v2
-
-TTS_MODEL=speech-2.8-turbo
-MINIMAX_VOICE_ID=
+TTS_PROVIDER=qwen_audio
+TTS_MODEL=qwen-audio-3.0-tts-flash
+TTS_VOICE=longanhuan_v3.6
 TTS_SPEED=0.9
 TTS_TIMEOUT=60
 ```
 
-`MINIMAX_VOICE_ID` 不在源码硬编码，由 repository owner 从 MiniMax 控制台选定。
-
-第一版输出：
+使用官方 DashScope SDK 访问 Workspace WebSocket：
 
 ```text
-MP3
-mono
+wss://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference
 ```
 
-TTS adapter 返回项目自己的：
+`longanhuan_v3.6` 是官方示例中的中英双语 system voice；第一版固定使用，不做 voice routing。输出为 mono MP3，并继续包装为：
 
 ```text
 SynthesizedAudio
 ```
 
-不把 provider URL 暴露给 MiniProgram。
+MiniMax adapter 保留但不再是默认 TTS，也不纳入当前成功条件。
 
-官方/框架参考：
+官方参考：
 
-- https://solutions.minimaxi.com/debug/speech
-- https://docs.pipecat.ai/api-reference/server/services/tts/minimax
+- https://www.alibabacloud.com/help/en/model-studio/realtime-tts-user-guide
+- https://www.alibabacloud.com/help/en/model-studio/qwen-audio-tts-voice-list
 
 ---
 
-## 4. Architecture Boundary
+## 5. Architecture Boundary
 
 Tasks 012–015 属于：
 
@@ -138,7 +137,15 @@ Pipecat 继续保留给后续：
 
 ---
 
-## 5. Secrets
+## 6. Retained Adapters
+
+- DeepSeek：`LLM_PROVIDER=openai_compatible`，保留原 `OPENAI_*` 配置；
+- MiniMax：`TTS_PROVIDER=minimax`，保留原 `MINIMAX_*` 配置；
+- 两者均不是默认 Voice MVP provider。
+
+---
+
+## 7. Secrets
 
 真实 Key 只放：
 
@@ -149,8 +156,8 @@ Pipecat 继续保留给后续：
 绝不提交：
 
 ```text
-OPENAI_API_KEY
 DASHSCOPE_API_KEY
+OPENAI_API_KEY
 MINIMAX_API_KEY
 ```
 

@@ -43,9 +43,9 @@ Manual Integration：
 
 本地有 key 时运行真实：
 
-- STT
-- LLM
-- TTS
+- Qwen LLM `qwen3.7-flash`
+- Qwen STT `qwen-audio-3.0-asr-flash`
+- Qwen TTS `qwen-audio-3.0-tts-flash`
 
 真实 key 不进入源码。
 

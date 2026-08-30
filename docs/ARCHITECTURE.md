@@ -147,12 +147,14 @@ server/
 
 ```text
 APP_ENV=development
-STT_PROVIDER=
-LLM_PROVIDER=
-TTS_PROVIDER=
+LLM_PROVIDER=qwen
+STT_PROVIDER=qwen_audio
+TTS_PROVIDER=qwen_audio
 ```
 
 第三方差异由 server adapter/factory 隔离。
+
+默认 Batch Voice MVP 的 LLM/STT/TTS 共用 Alibaba Model Studio 北京 Workspace；DeepSeek 和 MiniMax adapters 保留但不参与默认链路。
 
 `development` / `test` 允许 Fake provider；`production` 禁止 provider 为空或 `fake`，避免漏配时静默运行测试实现。
 

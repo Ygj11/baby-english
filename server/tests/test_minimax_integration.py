@@ -9,8 +9,8 @@ from server.app.voice.tts import MiniMaxTTS, create_tts
 @pytest.mark.real_provider
 @pytest.mark.asyncio
 async def test_minimax_real_provider_returns_nonempty_mp3() -> None:
-    if os.getenv("RUN_REAL_PROVIDER_TESTS") != "1":
-        pytest.skip("Set RUN_REAL_PROVIDER_TESTS=1 for real provider integration.")
+    if os.getenv("RUN_MINIMAX_PROVIDER_TESTS") != "1":
+        pytest.skip("Set RUN_MINIMAX_PROVIDER_TESTS=1 for MiniMax integration.")
 
     tts = create_tts("minimax")
     assert isinstance(tts, MiniMaxTTS)

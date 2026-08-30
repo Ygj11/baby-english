@@ -57,8 +57,8 @@ Task 010 的 TTS 回复音频通过本项目临时 media ID 提供，默认 5 �
 | Provider | 发送数据 | 目的 | 区域/跨境 | 保存策略 |
 | --- | --- | --- | --- | --- |
 | DeepSeek | Tutor system prompt、儿童输入文本、年龄/年级/英语等级衍生的教学上下文 | 生成儿童 Tutor 回复 | 上线前按实际部署与官方条款确认跨境情况 | 本项目不保存 provider raw response；provider 侧策略上线前复核 |
-| Alibaba Cloud Model Studio（cn-beijing） | 单次临时录音的 Base64 Data URI、语言提示 | Batch STT | 请求发送至 owner 配置的北京 Workspace | 请求结束删除本地原始上传；provider 侧策略上线前复核 |
-| MiniMax | AI Tutor 回复文本、owner 选择的 Voice ID | 生成单次 MP3 语音回复 | 使用 owner 配置的国内 T2A endpoint；上线前复核实际处理区域 | 本项目仅通过临时 media ID 保留生成音频，默认 5 分钟过期；provider 侧策略上线前复核 |
+| Alibaba Cloud Model Studio（cn-beijing） | Tutor prompt/儿童输入文本、单次临时录音 Base64 Data URI、语言提示、Tutor 回复文本 | 默认 Qwen LLM、Batch STT、Batch TTS | 请求发送至 owner 配置的北京 Workspace | 请求结束删除本地原始上传；生成音频仅由临时 media ID 保存且默认 5 分钟过期；provider 侧策略上线前复核 |
+| MiniMax（保留、非默认） | 仅在 owner 显式选择该 adapter 时发送 Tutor 回复文本和 Voice ID | 可选 Batch TTS | 使用 owner 配置的 endpoint；上线前复核实际处理区域 | 不参与默认链路；provider 侧策略上线前复核 |
 
 ## 5. Logging
 

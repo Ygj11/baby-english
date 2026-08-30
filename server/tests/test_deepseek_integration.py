@@ -10,8 +10,8 @@ from server.app.tutor.service import TutorService
 @pytest.mark.real_provider
 @pytest.mark.asyncio
 async def test_deepseek_real_provider_returns_nonempty_child_tutor_reply() -> None:
-    if os.getenv("RUN_REAL_PROVIDER_TESTS") != "1":
-        pytest.skip("Set RUN_REAL_PROVIDER_TESTS=1 for real provider integration.")
+    if os.getenv("RUN_DEEPSEEK_PROVIDER_TESTS") != "1":
+        pytest.skip("Set RUN_DEEPSEEK_PROVIDER_TESTS=1 for DeepSeek integration.")
 
     llm = create_llm("openai_compatible")
     assert isinstance(llm, OpenAICompatibleLLM)

@@ -45,13 +45,7 @@ MVP 目标：
 - 支持 OpenAI-compatible 或 Pipecat 已支持的 service
 - 中国大陆可用性良好
 
-候选：
-
-- Qwen
-- DeepSeek
-- 其他 OpenAI-compatible provider
-
-真实默认值由 owner 在 Task 006 开始前确定或通过 `.env` 配置。
+当前默认：Qwen `qwen3.7-flash`。DeepSeek adapter 保留给未来高级/复杂任务，但不自动路由或 fallback。
 
 不要在代码中把产品逻辑绑定模型品牌。
 
@@ -76,6 +70,8 @@ Gateway 可：
 
 禁止为了“必须用 Pipecat”人为构造复杂 Frame pipeline。
 
+当前默认：Qwen Audio `qwen-audio-3.0-asr-flash`。
+
 ### Realtime STT
 
 实时/流式阶段：
@@ -95,6 +91,8 @@ audio
 ```
 
 与 STT 同原则。
+
+当前默认：Qwen Audio `qwen-audio-3.0-tts-flash`；MiniMax adapter 保留但不是默认值。
 
 ### Realtime TTS
 

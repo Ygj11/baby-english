@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import httpx
@@ -10,9 +11,10 @@ from server.app.api.voice import (
     get_tts_gateway,
 )
 from server.app.main import app
+from server.app.tutor.llm import LLMError
 from server.app.tutor.service import TutorService
 from server.app.voice.media import TemporaryMediaStore
-from server.app.voice.stt import Transcript
+from server.app.voice.stt import STTError, Transcript
 from server.app.voice.tts import (
     FakeTTS,
     SynthesizedAudio,
@@ -31,6 +33,12 @@ class RecordingSTT:
         return Transcript(text="苹果英文怎么说", duration_ms=1830)
 
 
+class FailingSTT(RecordingSTT):
+    async def transcribe(self, audio_path: Path) -> Transcript:
+        self.audio_path = audio_path
+        raise STTError("provider raw stt error")
+
+
 class RecordingLLM:
     def __init__(self) -> None:
         self.message = ""
@@ -40,6 +48,13 @@ class RecordingLLM:
         self.message = message
         self.system_prompt = system_prompt
         return "Apple 🍎. Repeat after me: apple."
+
+
+class FailingLLM(RecordingLLM):
+    async def generate(self, *, system_prompt: str, message: str) -> str:
+        self.message = message
+        self.system_prompt = system_prompt
+        raise LLMError("provider raw llm error")
 
 
 class RecordingTTS:
@@ -75,7 +90,11 @@ def set_voice_overrides(
 
 
 @pytest.mark.asyncio
-async def test_batch_voice_turn_runs_stt_tutor_llm_tts_and_media(tmp_path: Path) -> None:
+async def test_batch_voice_turn_runs_stt_tutor_llm_tts_and_media(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="uvicorn.error.baby_english.voice")
     stt = RecordingSTT()
     llm = RecordingLLM()
     tts = RecordingTTS()
@@ -114,11 +133,15 @@ async def test_batch_voice_turn_runs_stt_tutor_llm_tts_and_media(tmp_path: Path)
     assert llm.message == "苹果英文怎么说"
     assert "beginner" in llm.system_prompt
     assert tts.text == "Apple 🍎. Repeat after me: apple."
+    assert "voice_turn_latency stt_ms=" in caplog.text
+    assert "苹果英文怎么说" not in caplog.text
+    assert "Apple 🍎" not in caplog.text
 
 
 @pytest.mark.asyncio
 async def test_voice_turn_provider_failure_is_safe_and_cleans_temp(
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     stt = RecordingSTT()
     store = TemporaryMediaStore(base_dir=tmp_path)
@@ -147,6 +170,55 @@ async def test_voice_turn_provider_failure_is_safe_and_cleans_temp(
     assert response.status_code == 503
     assert response.json() == {"detail": "Voice tutor is temporarily unavailable."}
     assert "provider raw error" not in response.text
+    assert "stage=tts" in caplog.text
+    assert "provider raw error" not in caplog.text
+    assert stt.audio_path is not None
+    assert not stt.audio_path.exists()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("stage", "stt", "llm"),
+    [
+        ("stt", FailingSTT(), RecordingLLM()),
+        ("llm", RecordingSTT(), FailingLLM()),
+    ],
+)
+async def test_voice_turn_stt_and_llm_failures_are_safe_and_clean_temp(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    stage: str,
+    stt: RecordingSTT,
+    llm: RecordingLLM,
+) -> None:
+    store = TemporaryMediaStore(base_dir=tmp_path)
+    set_voice_overrides(
+        stt=stt,
+        llm=llm,
+        tts=RecordingTTS(),
+        store=store,
+    )
+    transport = httpx.ASGITransport(app=app)
+
+    try:
+        async with httpx.AsyncClient(
+            transport=transport,
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                "/api/voice/turn",
+                data={"age": "8", "grade": "3", "english_level": "beginner"},
+                files={"file": ("recording.mp3", b"mock audio", "audio/mpeg")},
+            )
+    finally:
+        app.dependency_overrides.clear()
+        store.cleanup()
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Voice tutor is temporarily unavailable."}
+    assert f"stage={stage}" in caplog.text
+    assert "provider raw" not in caplog.text
+    assert "provider raw" not in response.text
     assert stt.audio_path is not None
     assert not stt.audio_path.exists()
 

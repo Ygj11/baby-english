@@ -1,6 +1,7 @@
 """LLM adapter boundary for the tutor."""
 
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -64,6 +65,10 @@ class OpenAICompatibleLLM:
         return content.strip()
 
 
+class QwenLLM(OpenAICompatibleLLM):
+    """Thin Qwen chat adapter using Alibaba's OpenAI-compatible endpoint."""
+
+
 def create_llm(provider: str | None = None) -> LLMGateway:
     """Create the configured LLM adapter without selecting a paid provider."""
     selected_provider = provider
@@ -93,7 +98,30 @@ def create_llm(provider: str | None = None) -> LLMGateway:
             ),
         )
 
+    if normalized_provider == "qwen":
+        api_key = _required_environment("DASHSCOPE_API_KEY")
+        workspace_id = _required_environment("DASHSCOPE_WORKSPACE_ID")
+        region = os.getenv("DASHSCOPE_REGION", "cn-beijing").strip()
+        model = _required_environment("LLM_MODEL")
+        timeout = _positive_float_environment("LLM_TIMEOUT", default=60.0)
+        return QwenLLM(
+            model=model,
+            client=AsyncOpenAI(
+                api_key=api_key,
+                base_url=build_qwen_llm_base_url(workspace_id, region),
+                timeout=timeout,
+            ),
+        )
+
     raise LLMConfigurationError("The configured LLM provider is unavailable.")
+
+
+def build_qwen_llm_base_url(workspace_id: str, region: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9-]+", workspace_id):
+        raise LLMConfigurationError("DASHSCOPE_WORKSPACE_ID is invalid.")
+    if not re.fullmatch(r"[a-z0-9-]+", region):
+        raise LLMConfigurationError("DASHSCOPE_REGION is invalid.")
+    return f"https://{workspace_id}.{region}.maas.aliyuncs.com/compatible-mode/v1"
 
 
 def _required_environment(name: str) -> str:
