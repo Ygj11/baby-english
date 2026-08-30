@@ -77,6 +77,15 @@ TTS
 Playback
 ```
 
+Task 010 自动测试使用 Fake/Mock STT、LLM、TTS，验证：
+
+- 上传音频到 transcript；
+- transcript 进入 Child Tutor；
+- reply 进入 TTS；
+- 返回本项目临时 media URL；
+- provider failure 映射为安全错误；
+- 上传临时文件和过期回复音频 cleanup。
+
 ## 6. Child Tutor Golden Cases
 
 ### Age 8 / Beginner

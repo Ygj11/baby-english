@@ -61,7 +61,24 @@ npm --version
 ffmpeg -version
 ```
 
-## 6. Environment
+## 6. MiniProgram 首次运行
+
+安装并保留本地 npm 依赖：
+
+```bash
+cd miniprogram
+npm install
+```
+
+然后在微信开发者工具中导入 `miniprogram/`，选择：
+
+```text
+菜单栏 → 工具 → 构建 npm
+```
+
+构建生成的 `miniprogram/miniprogram_npm/` 是可再生构建产物，不作为源码维护。
+
+## 7. Environment
 
 仓库提供：
 
@@ -107,7 +124,7 @@ XF_API_SECRET=
 DATABASE_URL=
 ```
 
-## 7. 用户开工步骤
+## 8. 用户开工步骤
 
 1. 创建 GitHub private repo
 2. clone 到 Mac
@@ -115,14 +132,14 @@ DATABASE_URL=
 4. commit
 5. 从 `tasks/001-*.md` 开始交给 Codex
 
-## 8. Secret
+## 9. Secret
 
 不要把生产 secret 粘进 Codex task。
 
 真实 integration test 通过本地 `.env` 提供。
 
 
-## 9. WeChat Developer Tool Local API
+## 10. WeChat Developer Tool Local API
 
 本地开发时，小程序是否能访问 `localhost` / LAN API 取决于开发者工具和设备环境。
 

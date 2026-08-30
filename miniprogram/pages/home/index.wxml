@@ -3,16 +3,21 @@
     <text class="eyebrow">Baby English</text>
     <text class="title">Hi！今天想学什么？</text>
     <text class="subtitle">选一个开始吧</text>
+    <text class="backend-status backend-status--{{backendStatus}}">
+      Backend: {{backendStatus}}
+    </text>
   </view>
 
-  <view class="entry-list">
-    <view
+  <t-cell-group theme="card" t-class="entry-list">
+    <t-cell
       wx:for="{{entries}}"
       wx:key="id"
-      class="entry"
+      title="{{item.label}}"
+      url="{{item.url}}"
+      arrow="{{item.id === 'chat'}}"
+      hover="{{item.id === 'chat'}}"
     >
-      <text class="entry-icon">{{item.icon}}</text>
-      <text class="entry-label">{{item.label}}</text>
-    </view>
-  </view>
+      <text slot="left-icon" class="entry-icon">{{item.icon}}</text>
+    </t-cell>
+  </t-cell-group>
 </view>

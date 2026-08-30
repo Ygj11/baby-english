@@ -1,0 +1,65 @@
+@import "../../components/foundation/tokens.wxss";
+
+.chat-page {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  background: #f5f7ff;
+}
+
+.message-list {
+  box-sizing: border-box;
+  height: 0;
+  flex: 1;
+  padding: var(--be-space-md);
+}
+
+.error-message {
+  margin: var(--be-space-sm) 0;
+  padding: var(--be-space-sm);
+  border-radius: var(--be-radius-lg);
+  background: #fff1f0;
+  color: #b42318;
+  font-size: var(--be-font-body);
+  text-align: center;
+}
+
+.suggested-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--be-space-xs);
+  margin: var(--be-space-sm) 0;
+}
+
+.recorder-panel {
+  padding: var(--be-space-sm);
+  border-top: 2rpx solid #e5e9f5;
+  background: #ffffff;
+}
+
+.recorder-status {
+  display: block;
+  margin-bottom: var(--be-space-xs);
+  color: #697386;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.transcript {
+  display: block;
+  margin-bottom: var(--be-space-sm);
+  color: #25304a;
+  font-size: var(--be-font-body);
+  text-align: center;
+}
+
+.recorder-actions {
+  display: flex;
+  gap: var(--be-space-xs);
+}
+
+.sender-wrap {
+  padding: var(--be-space-xs) var(--be-space-sm) var(--be-space-sm);
+  border-top: 2rpx solid #e5e9f5;
+  background: #ffffff;
+}

@@ -1,0 +1,81 @@
+<view class="chat-page">
+  <scroll-view class="message-list" scroll-y>
+    <t-chat-message
+      wx:for="{{messages}}"
+      wx:key="id"
+      chat-id="{{item.id}}"
+      role="{{item.role}}"
+      placement="{{item.placement}}"
+      name="{{item.name}}"
+      status="{{item.status}}"
+      content="{{item.content}}"
+    />
+
+    <t-chat-message
+      wx:if="{{loading || actionLoading}}"
+      chat-id="loading"
+      role="assistant"
+      placement="left"
+      name="AI Tutor"
+      status="pending"
+    />
+
+    <view wx:if="{{errorMessage}}" class="error-message">
+      {{errorMessage}}
+    </view>
+
+    <view wx:if="{{suggestedActions.length}}" class="suggested-actions">
+      <t-button
+        wx:for="{{suggestedActions}}"
+        wx:key="id"
+        size="small"
+        theme="primary"
+        variant="outline"
+        disabled="{{actionLoading}}"
+        loading="{{actionLoading && item.id === 'explain_zh'}}"
+        data-action="{{item.id}}"
+        bind:tap="onSuggestedAction"
+      >
+        {{item.label}}
+      </t-button>
+    </view>
+  </scroll-view>
+
+  <view class="recorder-panel">
+    <text class="recorder-status">{{recorderMessage}}</text>
+    <text wx:if="{{transcript}}" class="transcript">{{transcript}}</text>
+
+    <t-button
+      wx:if="{{recorderState === 'idle' || recorderState === 'error'}}"
+      block
+      theme="primary"
+      bind:tap="startRecording"
+    >
+      🎤 {{recorderState === 'error' ? '重新录音' : '开始录音'}}
+    </t-button>
+
+    <view wx:elif="{{recorderState === 'recording'}}" class="recorder-actions">
+      <t-button block theme="danger" bind:tap="stopRecording">
+        停止录音
+      </t-button>
+      <t-button block variant="outline" bind:tap="cancelRecording">
+        取消
+      </t-button>
+    </view>
+
+    <t-button wx:else block disabled loading>
+      正在处理
+    </t-button>
+  </view>
+
+  <view class="sender-wrap">
+    <t-chat-sender
+      value="{{draft}}"
+      disabled="{{loading || actionLoading}}"
+      placeholder="输入你想学的英语"
+      render-presets="{{senderActions}}"
+      bind:change="onInputChange"
+      bind:send="onSend"
+    />
+  </view>
+</view>

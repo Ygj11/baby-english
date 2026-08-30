@@ -146,12 +146,15 @@ server/
 通过环境变量配置：
 
 ```text
+APP_ENV=development
 STT_PROVIDER=
 LLM_PROVIDER=
 TTS_PROVIDER=
 ```
 
 第三方差异由 server adapter/factory 隔离。
+
+`development` / `test` 允许 Fake provider；`production` 禁止 provider 为空或 `fake`，避免漏配时静默运行测试实现。
 
 ## 8. 第一阶段 Voice 模式
 
@@ -242,8 +245,10 @@ PEP 三年级上册
 /api/health
 /api/tutor/chat
 /api/voice/transcribe
-/api/voice/speak
 /api/voice/turn
+/api/voice/media/{media_id}
 ```
+
+`/api/voice/speak` 尚未实现，不属于当前可用 API boundary。
 
 禁止小程序直连第三方 AI provider。

@@ -5,3 +5,5 @@ __pycache__/
 .DS_Store
 miniprogram/project.config.json
 miniprogram/project.private.config.json
+node_modules/
+miniprogram/miniprogram_npm/

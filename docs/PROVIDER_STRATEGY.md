@@ -26,6 +26,16 @@ uv run pytest
 
 不得依赖真实 API key。
 
+环境规则：
+
+```text
+APP_ENV=development | test | production
+```
+
+- `development` / `test` 允许空 provider 或 `fake`，并使用对应 Fake；
+- `production` 禁止空 provider 和 `fake`，缺少真实 provider 配置时必须明确失败；
+- LLM、STT、TTS 使用同一条 fail-safe 规则。
+
 ## 3. LLM
 
 MVP 目标：

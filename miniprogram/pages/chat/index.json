@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "AI Tutor",
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-chat-message": "tdesign-miniprogram/chat-message/chat-message",
+    "t-chat-sender": "tdesign-miniprogram/chat-sender/chat-sender"
+  }
+}

@@ -1,0 +1,9 @@
+page {
+  --be-space-xs: 12rpx;
+  --be-space-sm: 20rpx;
+  --be-space-md: 32rpx;
+  --be-space-lg: 40rpx;
+  --be-radius-lg: 24rpx;
+  --be-font-body: 30rpx;
+  --be-font-title: 48rpx;
+}

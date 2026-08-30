@@ -108,3 +108,24 @@ cp miniprogram/project.config.json.example miniprogram/project.config.json
 ```
 
 然后在微信开发者工具中导入 `miniprogram/` 目录。示例配置使用 `touristappid`，真实 AppID 只填写在已被 Git 忽略的 `project.config.json` 中。
+
+安装 TDesign MiniProgram：
+
+```bash
+cd miniprogram
+npm install
+```
+
+安装完成后，在微信开发者工具中选择“工具 → 构建 npm”，再编译小程序。
+
+### 本地 API 联调
+
+小程序开发环境的 Base URL 集中配置在 `miniprogram/config/api.js`，默认连接 `http://127.0.0.1:8000`。启动后端：
+
+```bash
+uv run uvicorn server.app.main:app --reload
+```
+
+- 微信开发者工具联调 localhost 时，必要时在“详情 → 本地设置”关闭合法域名校验。
+- 真机不能使用 Mac 的 `127.0.0.1`，需要把本地配置改为手机可访问的 Mac LAN IP，或使用 HTTPS 测试地址。
+- 正式环境必须在微信后台配置 request/upload/download/socket 合法域名，并使用 HTTPS 地址。

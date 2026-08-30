@@ -1,16 +1,18 @@
+@import "../../components/foundation/tokens.wxss";
+
 .page {
   min-height: 100vh;
-  padding: 64rpx 40rpx;
+  padding: 64rpx var(--be-space-lg);
 }
 
 .hero {
   display: flex;
   flex-direction: column;
-  margin-bottom: 40rpx;
+  margin-bottom: var(--be-space-lg);
 }
 
 .eyebrow {
-  margin-bottom: 12rpx;
+  margin-bottom: var(--be-space-xs);
   color: #5b6ee1;
   font-size: 28rpx;
   font-weight: 600;
@@ -18,41 +20,49 @@
 
 .title {
   color: #172033;
-  font-size: 48rpx;
+  font-size: var(--be-font-title);
   font-weight: 700;
   line-height: 1.3;
 }
 
 .subtitle {
-  margin-top: 12rpx;
+  margin-top: var(--be-space-xs);
   color: #697386;
   font-size: 28rpx;
 }
 
-.entry-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
+.backend-status {
+  align-self: flex-start;
+  margin-top: var(--be-space-sm);
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: #eef1f6;
+  color: #697386;
+  font-size: 24rpx;
 }
 
-.entry {
-  display: flex;
-  min-height: 112rpx;
-  align-items: center;
-  padding: 24rpx 32rpx;
-  border: 2rpx solid #e5e9f5;
-  border-radius: 24rpx;
-  background: #ffffff;
+.backend-status--connected {
+  background: #e8f8ef;
+  color: #16794a;
+}
+
+.backend-status--unavailable {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.entry-list {
+  overflow: hidden;
+  border-radius: var(--be-radius-lg);
 }
 
 .entry-icon {
-  width: 72rpx;
+  display: inline-flex;
+  width: 64rpx;
+  min-height: 64rpx;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--be-space-sm);
   font-size: 44rpx;
   line-height: 1;
-}
-
-.entry-label {
-  color: #25304a;
-  font-size: 34rpx;
-  font-weight: 600;
 }

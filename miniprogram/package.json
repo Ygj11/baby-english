@@ -1,0 +1,11 @@
+{
+  "name": "baby-english-miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "tdesign-miniprogram": "^1.16.0"
+  }
+}
