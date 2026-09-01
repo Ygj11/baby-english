@@ -14,10 +14,15 @@
       wx:key="id"
       title="{{item.label}}"
       url="{{item.url}}"
-      arrow="{{item.id === 'chat'}}"
-      hover="{{item.id === 'chat'}}"
+      arrow="{{!!item.url}}"
+      hover="{{!!item.url}}"
     >
       <text slot="left-icon" class="entry-icon">{{item.icon}}</text>
     </t-cell>
   </t-cell-group>
+
+  <view class="settings-entry" bind:tap="goToProfile">
+    <text>⚙️ 学习设置</text>
+    <text class="settings-entry__hint">年龄、年级与英语水平</text>
+  </view>
 </view>

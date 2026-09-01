@@ -28,6 +28,19 @@ TTS
 4. 场景英语
 5. 英语故事
 
+`🎭 场景英语` 当前提供餐厅、学校、儿童商店和旅行问路四个服务端场景。进行中的
+场景在 Backend 临时保存文字对话以支持多轮记忆；完成评估后只保留结构化目标进度
+与简短总结，并删除原始场景对话。
+
+`📷 拍一拍` 当前支持相机/相册单图 Photo English：Backend 验证并去除图片元数据，
+用 Qwen Vision 生成一个儿童安全的小课程，只保存规范化单词、例句与练习短语，
+不保存原图、缩略图、EXIF、OCR 或 provider 原始响应。
+
+`📖 我的课本` 当前提供服务端安装的教材目录、Unit 选择和 grounded QA。教材由 owner
+以 repo 外的 `manifest.json + content.jsonl` 包通过 CLI 导入；LlamaIndex 使用
+`SentenceSplitter(384/48)`、Qwen `qwen3.7-text-embedding` 1024 维向量和本地持久化
+索引检索，现有 `LLMGateway` 只依据取回的有限上下文生成短答案。仓库不包含真实教材正文。
+
 ## 技术基线
 
 - 后端：Python + FastAPI
@@ -36,7 +49,8 @@ TTS
 - 小程序：微信原生 MiniProgram
 - UI：TDesign MiniProgram
 - 教材 RAG：LlamaIndex
-- 发音评测：讯飞 ISE（后续）
+- 发音评测：讯飞流式 ISE（独立 PronunciationGateway）
+- 图片理解：Qwen `qwen3.7-flash`（独立 VisionGateway，严格结构化输出）
 - 支付：wechatpayv3（后续）
 - 英语学习业务参考：Spoken（MIT source donor）
 - 微信能力参考：微信官方 miniprogram-demo
@@ -90,14 +104,35 @@ commit / PR
 
 ```bash
 uv sync
+uv run --env-file .env alembic upgrade head
 uv run uvicorn server.app.main:app --reload
 ```
 
 使用本地 `.env` 中的真实 Qwen Provider 配置启动：
 
 ```bash
+uv run --env-file .env alembic upgrade head
 uv run --env-file .env uvicorn server.app.main:app --reload
 ```
+
+发音练习默认使用离线 `FakePronunciationGateway`。真实讯飞 ISE 仅在后端 `.env` 配置
+`ISE_PROVIDER=xunfei` 及 `XFYUN_APP_ID`、`XFYUN_API_KEY`、`XFYUN_API_SECRET`
+后启用；小程序不会持有这些凭据。首次启动及新增 migration 后都需先执行 Alembic
+`upgrade head`。
+
+Photo English 默认复用 `.env` 中的 `DASHSCOPE_API_KEY`、北京 Workspace，并使用
+`VISION_PROVIDER=qwen`、`VISION_MODEL=qwen3.7-flash`。开发或离线测试可显式设为
+`VISION_PROVIDER=fake`；production 禁止 Fake provider。
+
+教材导入同样复用北京 Workspace。先准备 repo 外的授权结构化教材包，再运行：
+
+```bash
+uv run --env-file .env python -m server.app.textbook.ingest /absolute/path/outside/repo/textbook-package
+```
+
+索引写入 Git 忽略的 `.data/textbook_indexes/`；其中包含教材 chunks 和 embeddings，应按
+受保护的服务端运行数据管理。导入时教材块会发送给百炼 Embedding API，问答时只有命中的
+有界上下文会发送给当前 Qwen LLM。
 
 Pipecat 作为当前项目的 core dependency 管理，不使用 scaffold 重建项目。验证安装：
 

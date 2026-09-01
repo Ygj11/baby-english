@@ -99,6 +99,8 @@ npm install
 ```text
 APP_ENV=development
 
+DATABASE_URL=sqlite+aiosqlite:///./baby_english.db
+
 DASHSCOPE_API_KEY=
 DASHSCOPE_WORKSPACE_ID=
 DASHSCOPE_REGION=cn-beijing
@@ -113,21 +115,57 @@ TTS_PROVIDER=qwen_audio
 TTS_MODEL=qwen-audio-3.0-tts-flash
 TTS_VOICE=longanhuan_v3.6
 
+EMBEDDING_PROVIDER=qwen
+EMBEDDING_MODEL=qwen3.7-text-embedding
+EMBEDDING_DIMENSIONS=1024
+EMBEDDING_TIMEOUT=60
+TEXTBOOK_INDEX_DIR=.data/textbook_indexes
+TEXTBOOK_RETRIEVAL_TOP_K=4
+
+ISE_PROVIDER=fake
+XFYUN_APP_ID=
+XFYUN_API_KEY=
+XFYUN_API_SECRET=
+ISE_TIMEOUT=60
+
 WECHAT_APP_ID=
 WECHAT_APP_SECRET=
 ```
 
-后续：
+真实发音评测将 `ISE_PROVIDER` 改为 `xunfei`。讯飞凭据只放在 Backend 本地
+`.env`，不进入小程序、源码或日志。
 
-```text
-XF_APP_ID=
-XF_API_KEY=
-XF_API_SECRET=
+## 8. Database Migration
 
-DATABASE_URL=
+首次启动和拉取新 migration 后执行：
+
+```bash
+uv run --env-file .env alembic upgrade head
 ```
 
-## 8. 用户开工步骤
+本地默认 SQLite 文件不会提交。应用启动不会调用 `create_all()`，schema 只由 Alembic 管理。
+
+## 9. Textbook Ingestion
+
+教材 source package 必须由 owner 授权并保存在 repository 外，格式为一个
+`manifest.json` 和 manifest 指向的 UTF-8 `content.jsonl`。完成 migration 后运行：
+
+```bash
+uv run --env-file .env python -m server.app.textbook.ingest /absolute/path/outside/repo/textbook-package
+```
+
+相同 fingerprint/config 会安全 no-op；变更会在临时目录构建、重载验证后替换既有索引。
+`.data/textbook_indexes/` 含教材 chunks 与 embeddings，不提交、不公开下载并按受保护运行数据备份。
+导入会把教材块发送给百炼 Embedding；QA 仅把 top-k 有界命中上下文发送给已有 Qwen LLM。
+
+可选真实验证：
+
+```bash
+RUN_REAL_PROVIDER_TESTS=1 uv run --env-file .env pytest -m real_provider -k qwen_textbook_embedding -vv -s
+RUN_REAL_PROVIDER_TESTS=1 uv run --env-file .env pytest -m real_provider -k textbook_rag_e2e -vv -s
+```
+
+## 10. 用户开工步骤
 
 1. 创建 GitHub private repo
 2. clone 到 Mac
@@ -135,7 +173,7 @@ DATABASE_URL=
 4. commit
 5. 从 `tasks/001-*.md` 开始交给 Codex
 
-## 9. Secret
+## 11. Secret
 
 不要把生产 secret 粘进 Codex task。
 
@@ -155,8 +193,17 @@ REAL_STT_AUDIO_PATH=/tmp/baby-english-stt-test.wav \
 uv run --env-file .env pytest -m real_provider
 ```
 
+真实讯飞 ISE 测试需要一份 repo 外的 16 kHz、单声道英文 MP3：
 
-## 10. WeChat Developer Tool Local API
+```bash
+RUN_REAL_PROVIDER_TESTS=1 \
+REAL_ISE_AUDIO_PATH=/absolute/path/to/english-reading.mp3 \
+REAL_ISE_REFERENCE_TEXT="banana" \
+uv run --env-file .env pytest -m real_provider -k xunfei_ise -vv -s
+```
+
+
+## 12. WeChat Developer Tool Local API
 
 本地开发时，小程序是否能访问 `localhost` / LAN API 取决于开发者工具和设备环境。
 

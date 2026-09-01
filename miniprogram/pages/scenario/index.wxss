@@ -1,0 +1,18 @@
+@import "../../components/foundation/tokens.wxss";
+
+.session-page { min-height: 100vh; padding: 28rpx var(--be-space-md) 220rpx; }
+.scene-header { display: flex; flex-direction: column; margin-bottom: 24rpx; }
+.scene-title { color: #172033; font-size: 38rpx; font-weight: 700; }
+.scene-partner { margin-top: 8rpx; color: #697386; font-size: 25rpx; }
+.goal-card, .pronunciation-card, .completion-card { display: flex; gap: 18rpx; align-items: center; justify-content: space-between; margin-bottom: 16rpx; padding: 22rpx; border-radius: 20rpx; background: #fff; }
+.goal-card--done { background: #edf9f2; }
+.goal-copy, .completion-card, .pronunciation-card { flex-direction: column; align-items: flex-start; }
+.goal-title, .completion-title { color: #172033; font-size: 28rpx; font-weight: 700; }
+.goal-phrase { margin-top: 6rpx; color: #5b6ee1; font-size: 26rpx; }
+.goal-hint, .completion-tip { margin-top: 5rpx; color: #697386; font-size: 23rpx; }
+.conversation { height: 520rpx; margin: 24rpx 0; padding: 18rpx; border-radius: 24rpx; background: #fff; }
+.pronunciation-score { color: #16794a; font-size: 40rpx; font-weight: 700; }
+.completion-card { background: #fff7dd; line-height: 1.6; }
+.recorder-panel { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; margin: 22rpx 0; color: #4e5969; }
+.sender-wrap { position: fixed; right: 0; bottom: 0; left: 0; padding: 20rpx 28rpx 34rpx; background: #fff; box-shadow: 0 -8rpx 28rpx rgba(0, 0, 0, .06); }
+.error-message, .status-text { display: block; margin: 20rpx 0; color: #b42318; text-align: center; }

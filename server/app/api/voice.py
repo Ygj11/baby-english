@@ -4,13 +4,15 @@ import logging
 from time import perf_counter
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from server.app.api.dependencies import get_client_id, require_student_profile
 from server.app.api.tutor import get_tutor_service
 from server.app.tutor.llm import LLMError
-from server.app.tutor.schemas import EnglishLevel, StudentProfile
+from server.app.tutor.repeat_target import extract_repeat_target
+from server.app.tutor.schemas import StudentProfile
 from server.app.tutor.service import TutorService
 from server.app.voice.audio import (
     AudioTooLargeError,
@@ -44,6 +46,7 @@ class TranscriptionResponse(BaseModel):
 class VoiceTurnResponse(BaseModel):
     transcript: str
     reply: str
+    repeat_text: str | None
     audio_url: str
     suggested_actions: list[str]
 
@@ -80,6 +83,7 @@ def get_media_store() -> TemporaryMediaStore:
 @router.post("/transcribe", response_model=TranscriptionResponse)
 async def transcribe(
     file: Annotated[UploadFile, File()],
+    _client_id: Annotated[str, Depends(get_client_id)],
     gateway: Annotated[STTGateway, Depends(get_stt_gateway)],
 ) -> TranscriptionResponse:
     try:
@@ -116,9 +120,7 @@ async def transcribe(
 @router.post("/turn", response_model=VoiceTurnResponse)
 async def voice_turn(
     file: Annotated[UploadFile, File()],
-    age: Annotated[int, Form(ge=5, le=15)],
-    grade: Annotated[int, Form(ge=1, le=9)],
-    english_level: Annotated[EnglishLevel, Form()],
+    student: Annotated[StudentProfile, Depends(require_student_profile)],
     stt: Annotated[STTGateway, Depends(get_stt_gateway)],
     tutor: Annotated[TutorService, Depends(get_tutor_service)],
     tts: Annotated[TTSGateway, Depends(get_tts_gateway)],
@@ -134,11 +136,6 @@ async def voice_turn(
 
             stage = "llm"
             stage_started = perf_counter()
-            student = StudentProfile(
-                age=age,
-                grade=grade,
-                english_level=english_level,
-            )
             reply = await tutor.reply(transcription.text, student)
             llm_ms = _elapsed_ms(stage_started)
 
@@ -178,11 +175,16 @@ async def voice_turn(
         total_ms,
     )
 
+    repeat_text = extract_repeat_target(reply)
+    actions = ["listen", "explain_zh"]
+    if repeat_text is not None:
+        actions.insert(1, "repeat")
     return VoiceTurnResponse(
         transcript=transcription.text,
         reply=reply,
+        repeat_text=repeat_text,
         audio_url=f"/api/voice/media/{media_id}",
-        suggested_actions=["listen", "repeat", "explain_zh"],
+        suggested_actions=actions,
     )
 
 

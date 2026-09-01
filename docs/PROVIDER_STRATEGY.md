@@ -34,7 +34,7 @@ APP_ENV=development | test | production
 
 - `development` / `test` 允许空 provider 或 `fake`，并使用对应 Fake；
 - `production` 禁止空 provider 和 `fake`，缺少真实 provider 配置时必须明确失败；
-- LLM、STT、TTS 使用同一条 fail-safe 规则。
+- LLM、STT、TTS 与教材 Embedding 使用同一条 fail-safe 规则。
 
 ## 3. LLM
 
@@ -100,7 +100,16 @@ audio
 
 优先通过 Pipecat TTS service 进入 Voice pipeline。
 
-## 6. Pronunciation
+## 6. Textbook Embedding
+
+当前默认是北京 Workspace 的 Qwen `qwen3.7-text-embedding`，固定 1024 维、batch 不超过
+20。LlamaIndex 的 OpenAI-compatible embedding integration 位于 Textbook 专用边界后；
+不复用 `LLMGateway` 做 embedding，也不添加 provider registry、fallback 或自建向量引擎。
+
+自动测试显式使用 LlamaIndex `MockEmbedding`，真实 smoke/E2E 只通过
+`RUN_REAL_PROVIDER_TESTS=1` opt-in。
+
+## 7. Pronunciation
 
 发音评测独立于 STT。
 
@@ -110,7 +119,7 @@ audio
 
 不要用“ASR 识别正确率”冒充发音评分。
 
-## 7. Owner Decision Gates
+## 8. Owner Decision Gates
 
 在以下 Task 前，owner 需要决定/准备：
 

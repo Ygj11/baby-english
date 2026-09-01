@@ -1,0 +1,33 @@
+<view class="catalogue-page">
+  <view class="catalogue-header">
+    <text class="catalogue-title">选一个场景开口练习</text>
+    <text class="catalogue-subtitle">每个场景有 3 个小目标，慢慢完成就好。</text>
+  </view>
+
+  <view wx:if="{{profileRequired}}" class="notice-card">
+    <text>先完成学习设置，场景伙伴才能用适合你的方式说话。</text>
+    <t-button size="small" theme="primary" bind:tap="goToProfile">去设置</t-button>
+  </view>
+  <text wx:elif="{{loading}}" class="status-text">正在准备场景…</text>
+  <text wx:elif="{{errorMessage}}" class="status-text status-text--error">{{errorMessage}}</text>
+
+  <view
+    wx:for="{{scenes}}"
+    wx:key="id"
+    class="scene-card"
+    data-scene-id="{{item.id}}"
+    bind:tap="openScene"
+  >
+    <text class="scene-icon">{{item.icon}}</text>
+    <view class="scene-main">
+      <text class="scene-title">{{item.title_zh}}</text>
+      <text class="scene-en">{{item.title}}</text>
+      <text class="scene-subtitle">{{item.subtitle}}</text>
+      <view class="scene-meta">
+        <text>{{item.difficulty}}</text>
+        <text>已完成 {{item.progress.completed_count}}/{{item.progress.total_count}}</text>
+      </view>
+    </view>
+    <text class="scene-arrow">›</text>
+  </view>
+</view>

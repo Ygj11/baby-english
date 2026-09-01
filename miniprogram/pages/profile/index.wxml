@@ -1,0 +1,23 @@
+<view class="profile-page">
+  <view class="profile-header">
+    <text class="profile-title">学习设置</text>
+    <text class="profile-subtitle">只保存年龄、年级和英语水平，用来调整 Tutor 的回答。</text>
+  </view>
+
+  <t-cell-group theme="card">
+    <picker mode="selector" range="{{ages}}" value="{{ageIndex}}" bindchange="onAgeChange">
+      <t-cell title="年龄" note="{{ages[ageIndex]}} 岁" arrow />
+    </picker>
+    <picker mode="selector" range="{{grades}}" value="{{gradeIndex}}" bindchange="onGradeChange">
+      <t-cell title="年级" note="{{grades[gradeIndex]}} 年级" arrow />
+    </picker>
+    <picker mode="selector" range="{{levels}}" range-key="label" value="{{levelIndex}}" bindchange="onLevelChange">
+      <t-cell title="英语水平" note="{{levels[levelIndex].label}}" arrow />
+    </picker>
+  </t-cell-group>
+
+  <text wx:if="{{statusMessage}}" class="status-message">{{statusMessage}}</text>
+  <t-button block theme="primary" loading="{{saving}}" disabled="{{loading}}" bind:tap="save">
+    保存设置
+  </t-button>
+</view>

@@ -8,18 +8,18 @@ from server.app.tutor.service import TutorService
 
 CHAT_REQUEST = {
     "message": "苹果英文怎么说？",
-    "student": {
-        "age": 8,
-        "grade": 3,
-        "english_level": "beginner",
-    },
     "context": {"mode": "chat"},
 }
+CLIENT_HEADERS = {"X-Client-Id": "test_tutor_client_000000000001"}
+PROFILE = {"age": 8, "grade": 3, "english_level": "beginner"}
 
 
 async def post_chat(
     service: TutorService,
     request: dict | None = None,
+    *,
+    headers: dict[str, str] = CLIENT_HEADERS,
+    setup_profile: bool = True,
 ) -> httpx.Response:
     app.dependency_overrides[get_tutor_service] = lambda: service
     transport = httpx.ASGITransport(app=app)
@@ -29,9 +29,15 @@ async def post_chat(
             transport=transport,
             base_url="http://test",
         ) as client:
+            if setup_profile:
+                profile_response = await client.put(
+                    "/api/student/profile", headers=headers, json=PROFILE
+                )
+                assert profile_response.status_code == 200
             return await client.post(
                 "/api/tutor/chat",
                 json=request if request is not None else CHAT_REQUEST,
+                headers=headers,
             )
     finally:
         app.dependency_overrides.clear()
@@ -57,16 +63,26 @@ def test_no_provider_configuration_uses_fake_llm(
 @pytest.mark.asyncio
 async def test_chat_contract() -> None:
     response = await post_chat(
-        TutorService(llm=FakeLLM("Apple 🍎. Repeat after me: apple."))
+        TutorService(llm=FakeLLM("Apple 🍎. Repeat after me: apple"))
     )
 
     assert response.status_code == 200
     assert response.json() == {
-        "reply": "Apple 🍎. Repeat after me: apple.",
+        "reply": "Apple 🍎. Repeat after me: apple",
+        "repeat_text": "apple",
         "language": "mixed",
         "suggested_actions": ["repeat", "explain_zh"],
     }
     assert "listen" not in response.json()["suggested_actions"]
+
+
+@pytest.mark.asyncio
+async def test_chat_without_valid_repeat_target_hides_repeat_action() -> None:
+    response = await post_chat(TutorService(llm=FakeLLM("Apple means 苹果。")))
+
+    assert response.status_code == 200
+    assert response.json()["repeat_text"] is None
+    assert response.json()["suggested_actions"] == ["explain_zh"]
 
 
 class FailingLLM:
@@ -122,7 +138,7 @@ async def test_invalid_student_range_returns_422_without_calling_llm(
     request = {
         **CHAT_REQUEST,
         "student": {
-            **CHAT_REQUEST["student"],
+            **PROFILE,
             field: value,
         },
     }
@@ -131,6 +147,61 @@ async def test_invalid_student_range_returns_422_without_calling_llm(
 
     assert response.status_code == 422
     assert llm.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_missing_profile_returns_409_without_calling_llm() -> None:
+    llm = CountingLLM()
+    response = await post_chat(
+        TutorService(llm=llm),
+        headers={"X-Client-Id": "test_tutor_missing_0000000001"},
+        setup_profile=False,
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Student profile setup is required."}
+    assert llm.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_chat_prompt_uses_each_clients_stored_profile() -> None:
+    first = CountingLLM()
+    second = CountingLLM()
+    first.system_prompt = ""
+    second.system_prompt = ""
+
+    async def capture_first(*, system_prompt: str, message: str) -> str:
+        first.calls += 1
+        first.system_prompt = system_prompt
+        return "First"
+
+    async def capture_second(*, system_prompt: str, message: str) -> str:
+        second.calls += 1
+        second.system_prompt = system_prompt
+        return "Second"
+
+    first.generate = capture_first  # type: ignore[method-assign]
+    second.generate = capture_second  # type: ignore[method-assign]
+    headers_a = {"X-Client-Id": "test_tutor_isolation_a_000001"}
+    headers_b = {"X-Client-Id": "test_tutor_isolation_b_000001"}
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        await client.put(
+            "/api/student/profile",
+            headers=headers_a,
+            json={"age": 6, "grade": 1, "english_level": "starter"},
+        )
+        await client.put(
+            "/api/student/profile",
+            headers=headers_b,
+            json={"age": 12, "grade": 6, "english_level": "elementary"},
+        )
+
+    await post_chat(TutorService(llm=first), headers=headers_a, setup_profile=False)
+    await post_chat(TutorService(llm=second), headers=headers_b, setup_profile=False)
+
+    assert "age 6, grade 1, at starter level" in first.system_prompt
+    assert "age 12, grade 6, at elementary level" in second.system_prompt
 
 
 @pytest.mark.asyncio

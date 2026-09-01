@@ -1,0 +1,36 @@
+.profile-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 40rpx 28rpx;
+  background: #f5f7ff;
+}
+
+.profile-header {
+  margin-bottom: 32rpx;
+}
+
+.profile-title,
+.profile-subtitle,
+.status-message {
+  display: block;
+}
+
+.profile-title {
+  color: #1d2129;
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.profile-subtitle {
+  margin-top: 12rpx;
+  color: #4e5969;
+  font-size: 27rpx;
+  line-height: 1.6;
+}
+
+.status-message {
+  min-height: 40rpx;
+  margin: 28rpx 8rpx 16rpx;
+  color: #4e5969;
+  font-size: 26rpx;
+}

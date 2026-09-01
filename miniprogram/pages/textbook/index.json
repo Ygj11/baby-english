@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "课本学习",
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}

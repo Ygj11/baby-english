@@ -8,6 +8,10 @@ function clearModule(modulePath) {
 test("explainInChinese sends the last AI reply through the Tutor API", async () => {
   let requestOptions;
   global.wx = {
+    getStorageSync() {
+      return "test_miniprogram_client_000001";
+    },
+    setStorageSync() {},
     request(options) {
       requestOptions = options;
       options.success({
@@ -68,6 +72,13 @@ test("text and explain replies clear stale voice audio state", async () => {
         start() {},
         stop() {}
       };
+    },
+    getStorageSync() {
+      return "test_miniprogram_client_000001";
+    },
+    setStorageSync() {},
+    request(options) {
+      options.success({ statusCode: 200, data: { age: 8, grade: 3, english_level: "beginner" } });
     }
   };
   global.Page = (definition) => {
@@ -84,6 +95,7 @@ test("text and explain replies clear stale voice audio state", async () => {
   const voiceService = require("../services/voice");
   chatService.sendMessage = async () => ({
     reply: "A fresh text reply.",
+    repeat_text: "A fresh text reply",
     suggested_actions: ["repeat", "explain_zh"]
   });
   let explainedReply = "";
@@ -91,6 +103,7 @@ test("text and explain replies clear stale voice audio state", async () => {
     explainedReply = reply;
     return {
       reply: "这是简短中文解释。",
+      repeat_text: "Try again",
       suggested_actions: ["repeat", "explain_zh"]
     };
   };
@@ -98,6 +111,7 @@ test("text and explain replies clear stale voice audio state", async () => {
   voiceService.turn = async () => ({
     transcript: "apple 怎么说",
     reply: "Apple.",
+    repeat_text: "apple",
     audio_url: "/api/voice/media/current",
     suggested_actions: ["listen", "repeat", "explain_zh"]
   });
@@ -106,6 +120,7 @@ test("text and explain replies clear stale voice audio state", async () => {
     ...pageDefinition,
     data: {
       ...pageDefinition.data,
+      profileStatus: "ready",
       messages: [...pageDefinition.data.messages],
       suggestedActions: [
         { id: "listen", label: "再听" },

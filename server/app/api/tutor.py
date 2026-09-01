@@ -4,20 +4,16 @@ import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from server.app.api.dependencies import require_student_profile
 from server.app.tutor.llm import LLMConfigurationError, LLMError, create_llm
-from server.app.tutor.schemas import EnglishLevel, StudentProfile
+from server.app.tutor.repeat_target import extract_repeat_target
+from server.app.tutor.schemas import StudentProfile
 from server.app.tutor.service import TutorService
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 logger = logging.getLogger("uvicorn.error.baby_english.tutor")
-
-
-class StudentInput(BaseModel):
-    age: int = Field(ge=5, le=15)
-    grade: int = Field(ge=1, le=9)
-    english_level: EnglishLevel
 
 
 class ChatContext(BaseModel):
@@ -25,8 +21,9 @@ class ChatContext(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     message: str = Field(min_length=1, max_length=2000)
-    student: StudentInput
     context: ChatContext
 
     @field_validator("message", mode="before")
@@ -39,6 +36,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    repeat_text: str | None
     language: str
     suggested_actions: list[str]
 
@@ -60,17 +58,11 @@ def get_tutor_service() -> TutorService:
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
+    student: Annotated[StudentProfile, Depends(require_student_profile)],
     service: Annotated[TutorService, Depends(get_tutor_service)],
 ) -> ChatResponse:
     try:
-        reply = await service.reply(
-            request.message,
-            StudentProfile(
-                age=request.student.age,
-                grade=request.student.grade,
-                english_level=request.student.english_level,
-            ),
-        )
+        reply = await service.reply(request.message, student)
     except LLMError as error:
         logger.warning(
             "provider_failure stage=llm category=request exception=%s",
@@ -81,8 +73,13 @@ async def chat(
             detail="Tutor is temporarily unavailable.",
         ) from None
 
+    repeat_text = extract_repeat_target(reply)
+    actions = ["explain_zh"]
+    if repeat_text is not None:
+        actions.insert(0, "repeat")
     return ChatResponse(
         reply=reply,
+        repeat_text=repeat_text,
         language="mixed",
-        suggested_actions=["repeat", "explain_zh"],
+        suggested_actions=actions,
     )

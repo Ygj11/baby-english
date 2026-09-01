@@ -10,9 +10,24 @@ Page({
         label: "和我说英语",
         url: "/pages/chat/index"
       },
-      { id: "camera", icon: "📷", label: "拍一拍" },
-      { id: "textbook", icon: "📖", label: "我的课本" },
-      { id: "scenario", icon: "🎭", label: "场景英语" },
+      {
+        id: "camera",
+        icon: "📷",
+        label: "拍一拍",
+        url: "/pages/photo/index"
+      },
+      {
+        id: "textbook",
+        icon: "📖",
+        label: "我的课本",
+        url: "/pages/textbooks/index"
+      },
+      {
+        id: "scenario",
+        icon: "🎭",
+        label: "场景英语",
+        url: "/pages/scenarios/index"
+      },
       { id: "story", icon: "📚", label: "英语故事" }
     ]
   },
@@ -35,5 +50,9 @@ Page({
       .catch(() => {
         this.setData({ backendStatus: "unavailable" });
       });
+  },
+
+  goToProfile() {
+    wx.navigateTo({ url: "/pages/profile/index" });
   }
 });

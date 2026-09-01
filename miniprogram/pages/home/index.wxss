@@ -66,3 +66,16 @@
   font-size: 44rpx;
   line-height: 1;
 }
+.settings-entry {
+  display: flex;
+  justify-content: space-between;
+  margin: 28rpx 12rpx 0;
+  padding: 24rpx 28rpx;
+  color: #4e5969;
+  font-size: 28rpx;
+}
+
+.settings-entry__hint {
+  color: #86909c;
+  font-size: 24rpx;
+}

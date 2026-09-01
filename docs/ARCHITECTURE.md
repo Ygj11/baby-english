@@ -11,6 +11,9 @@ FastAPI Application
 │
 ├── Tutor
 ├── Voice
+├── Student Profile
+├── Pronunciation
+├── Scenario English
 ├── Vision
 ├── Textbook
 ├── Users
@@ -24,7 +27,7 @@ FastAPI Application
     │
     ├── LlamaIndex
     ├── Pronunciation Provider
-    └── PostgreSQL
+    └── SQLAlchemy / Alembic → SQLite（当前）/ PostgreSQL（未来）
 ```
 
 ## 2. 项目母仓库
@@ -131,7 +134,7 @@ server/
 │   ├── api/
 │   ├── voice/
 │   ├── tutor/
-│   ├── vision/
+│   ├── photo/
 │   ├── textbook/
 │   ├── pronunciation/
 │   ├── users/
@@ -154,7 +157,35 @@ TTS_PROVIDER=qwen_audio
 
 第三方差异由 server adapter/factory 隔离。
 
+发音练习保持独立边界：
+
+```text
+POST /api/pronunciation/evaluate
+→ PronunciationService
+→ PronunciationGateway (Fake | Xunfei ISE)
+→ normalized PronunciationResult
+→ PronunciationAttemptRepository
+```
+
+讯飞 adapter 独占 HMAC 鉴权、WebSocket 帧和 XML 解析；API/业务层只处理规范化
+0–100 分数。上传 MP3 是请求期临时文件，结果通过 SQLAlchemy/Alembic 保存，但原始
+音频和 provider XML 均不持久化。`X-Client-Id` 仍只是匿名数据 namespace，不是认证。
+
 默认 Batch Voice MVP 的 LLM/STT/TTS 共用 Alibaba Model Studio 北京 Workspace；DeepSeek 和 MiniMax adapters 保留但不参与默认链路。
+
+Photo English 复用同一北京 Workspace，但保持独立的薄边界：
+
+```text
+temporary_image (Pillow verify / EXIF transpose / resize / metadata strip)
+→ PhotoLearningService
+→ VisionGateway (Fake | Qwen qwen3.7-flash)
+→ strict Pydantic structured output
+→ domain result guard
+→ PhotoLearningRepository（仅 status=ok）
+```
+
+Profile read session 在 Vision 调用前关闭；成功结果只在 provider 返回后开启短写事务。
+原图与归一化 JPEG 都由临时上下文在成功/失败路径删除。
 
 `development` / `test` 允许 Fake provider；`production` 禁止 provider 为空或 `fake`，避免漏配时静默运行测试实现。
 
@@ -215,29 +246,56 @@ Tasks 009–010 只证明 Batch Voice Loop，不代表 realtime voice 已完成�
 
 ## 9. RAG
 
-MVP：
+Task 020 的教材 RAG：
 
 ```text
-LlamaIndex
+repo 外 manifest.json + content.jsonl
+→ 校验与稳定 source SHA-256
+→ LlamaIndex IngestionPipeline + SentenceSplitter(384/48)
+→ 显式 Qwen qwen3.7-text-embedding（1024 维）
+→ SimpleVectorStore / StorageContext.persist（每本书一个受保护索引）
+
+child question + client-scoped current textbook/unit
+→ TextbookRetriever（index manifest compatibility + exact Unit metadata filter）
+→ provider-neutral RetrievedTextbookChunk
+→ TextbookQAService
+→ existing LLMGateway
+→ short grounded answer + compact source location
 ```
 
-第一本教材：
-
-```text
-PEP 三年级上册
-```
-
-大量教材后再评估 RAGFlow。
+SQLAlchemy 只保存 catalogue、Unit 和 child selection 元数据；教材正文和 embeddings 只存在
+Git 忽略的运行时索引中。每次 index/retrieval 都显式传 embedding，禁止 LlamaIndex 默认
+OpenAI embedding/LLM。当前没有导入任何真实 PEP 内容，也不实现 RAGFlow、OCR 或外部向量库。
 
 ## 10. Database
 
-建议长期使用：
+Task 016 起使用：
 
-- PostgreSQL
-- SQLAlchemy
-- Alembic
+- SQLAlchemy 2.x async API；
+- Alembic 作为唯一 schema migration 机制；
+- 本地默认 `sqlite+aiosqlite:///./baby_english.db`；
+- 每个请求由 FastAPI dependency 管理独立 `AsyncSession`；
+- `StudentProfileRepository` 隔离 ORM，返回 Tutor 既有 domain `StudentProfile`。
 
-但 Tasks 001–010 不提前建设复杂数据库。
+当前表包括 `student_profiles`、`pronunciation_attempts`、`photo_learning_records`、
+`textbooks`、`textbook_units` 与 `student_textbooks`。未来可切 PostgreSQL，
+但当前不安装 PostgreSQL driver，也不让 Tutor/Voice/Provider adapter 直接依赖数据库。
+
+匿名数据 owner 由小程序稳定保存的 `X-Client-Id` 提供。它只是数据 namespace，不是认证 token；缺失或非法时不回退共享 `anon`。
+
+Scenario English 增加三个专用表：`scenario_sessions`、active-only
+`scenario_turns` 与 `scene_goal_progress`。完成场景时在一个本地事务内写结构化结果、
+upsert goal progress 并删除 raw turns，不引入通用 UnitOfWork 或 Memory framework。
+
+```text
+StudentProfile + ChildTutorPolicy + Scene + Goals + ordered active history
+→ existing LLMGateway
+→ short role-play reply
+
+complete
+→ SceneGoalAssessor
+→ atomic structured progress + raw-turn deletion
+```
 
 ## 11. External API Boundary
 
@@ -245,10 +303,21 @@ PEP 三年级上册
 
 ```text
 /api/health
+/api/student/profile
 /api/tutor/chat
 /api/voice/transcribe
 /api/voice/turn
 /api/voice/media/{media_id}
+/api/pronunciation/evaluate
+/api/scenarios
+/api/scenarios/{scene_id}/sessions
+/api/scenarios/sessions/{session_id}/*
+/api/photo/analyze
+/api/photo/records/{record_id}/listen
+/api/textbooks
+/api/textbooks/{textbook_id}/units
+/api/textbooks/current
+/api/textbooks/ask
 ```
 
 `/api/voice/speak` 尚未实现，不属于当前可用 API boundary。

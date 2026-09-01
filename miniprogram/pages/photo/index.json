@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "拍照学英语",
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}

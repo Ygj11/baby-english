@@ -31,6 +31,65 @@
   margin: var(--be-space-sm) 0;
 }
 
+.pronunciation-card {
+  margin: var(--be-space-sm) 0;
+  padding: var(--be-space-sm);
+  border-radius: var(--be-radius-lg);
+  background: #eef4ff;
+  color: #25304a;
+}
+
+.pronunciation-card__label,
+.pronunciation-card__target,
+.pronunciation-card__overall,
+.pronunciation-card__feedback {
+  display: block;
+}
+
+.pronunciation-card__label {
+  color: #697386;
+  font-size: 22rpx;
+}
+
+.pronunciation-card__target {
+  margin: 8rpx 0 16rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.pronunciation-card__result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx 24rpx;
+  align-items: center;
+  font-size: 25rpx;
+}
+
+.pronunciation-card__overall {
+  width: 100%;
+  color: #2f65d9;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.pronunciation-card__feedback {
+  width: 100%;
+  line-height: 1.6;
+}
+
+.pronunciation-words {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.pronunciation-word {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+}
+
 .recorder-panel {
   padding: var(--be-space-sm);
   border-top: 2rpx solid #e5e9f5;
@@ -62,4 +121,28 @@
   padding: var(--be-space-xs) var(--be-space-sm) var(--be-space-sm);
   border-top: 2rpx solid #e5e9f5;
   background: #ffffff;
+}
+.profile-guide {
+  margin: 24rpx;
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: #fff7e8;
+}
+
+.profile-guide__title,
+.profile-guide__body {
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.profile-guide__title {
+  color: #1d2129;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.profile-guide__body {
+  color: #4e5969;
+  font-size: 26rpx;
+  line-height: 1.6;
 }

@@ -1,0 +1,17 @@
+@import "../../components/foundation/tokens.wxss";
+
+.catalogue-page { min-height: 100vh; padding: 40rpx var(--be-space-lg); }
+.catalogue-header { display: flex; flex-direction: column; margin-bottom: 28rpx; }
+.catalogue-title { color: #172033; font-size: 42rpx; font-weight: 700; }
+.catalogue-subtitle { margin-top: 10rpx; color: #697386; font-size: 27rpx; }
+.scene-card, .notice-card { display: flex; align-items: center; gap: 22rpx; margin-bottom: 22rpx; padding: 28rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(48, 65, 135, .08); }
+.notice-card { flex-direction: column; align-items: flex-start; color: #4e5969; }
+.scene-icon { font-size: 54rpx; }
+.scene-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.scene-title { color: #172033; font-size: 32rpx; font-weight: 700; }
+.scene-en { color: #5b6ee1; font-size: 24rpx; }
+.scene-subtitle { margin-top: 10rpx; color: #697386; font-size: 25rpx; line-height: 1.5; }
+.scene-meta { display: flex; justify-content: space-between; margin-top: 18rpx; color: #16794a; font-size: 23rpx; }
+.scene-arrow { color: #86909c; font-size: 48rpx; }
+.status-text { display: block; padding: 50rpx 0; text-align: center; color: #697386; }
+.status-text--error { color: #b42318; }

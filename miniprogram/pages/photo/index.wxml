@@ -1,0 +1,81 @@
+<view class="photo-page">
+  <view class="photo-hero">
+    <text class="photo-title">📷 拍照学英语</text>
+    <text class="photo-subtitle">拍动物、食物、玩具或学习用品，一次学一个词</text>
+  </view>
+
+  <view wx:if="{{profileRequired}}" class="notice-card">
+    <text>先完成学习设置，照片课程会更适合你。</text>
+    <t-button size="small" theme="primary" bind:tap="goToProfile">去设置</t-button>
+  </view>
+
+  <view class="chooser-row">
+    <t-button theme="primary" disabled="{{state === 'analyzing'}}" bind:tap="chooseCamera">📷 拍照</t-button>
+    <t-button variant="outline" disabled="{{state === 'analyzing'}}" bind:tap="chooseAlbum">🖼️ 从相册选择</t-button>
+  </view>
+
+  <view wx:if="{{previewPath}}" class="preview-card">
+    <image class="photo-preview" src="{{previewPath}}" mode="aspectFit" />
+    <t-button
+      wx:if="{{state === 'selected'}}"
+      block
+      theme="primary"
+      disabled="{{profileStatus !== 'ready'}}"
+      bind:tap="analyzePhoto"
+    >看看能学什么</t-button>
+    <t-button wx:elif="{{state === 'analyzing'}}" block disabled loading>正在认真看照片…</t-button>
+  </view>
+
+  <view wx:if="{{state === 'ok' && result}}" class="lesson-card">
+    <text class="primary-word">{{result.primary_word_en}}</text>
+    <text class="primary-meaning">{{result.primary_meaning_zh}}</text>
+    <view class="sentence-block">
+      <text>{{result.simple_sentence_en}}</text>
+      <text class="sentence-zh">{{result.simple_sentence_zh}}</text>
+    </view>
+    <view wx:if="{{result.related_words.length}}" class="related-block">
+      <text class="section-label">相关词</text>
+      <view class="related-list">
+        <view wx:for="{{result.related_words}}" wx:key="word_en" class="related-item">
+          <text>{{item.word_en}}</text>
+          <text class="related-meaning">{{item.meaning_zh}}</text>
+        </view>
+      </view>
+    </view>
+    <text class="question">{{result.question_en}}</text>
+    <text class="encouragement">{{result.encouragement_zh}}</text>
+
+    <view class="action-grid">
+      <t-button size="small" variant="outline" loading="{{listening}}" bind:tap="listen">🔊 听一听</t-button>
+      <t-button
+        wx:if="{{recorderState === 'idle' || recorderState === 'error'}}"
+        size="small"
+        variant="outline"
+        bind:tap="startPronunciation"
+      >🎤 跟我读</t-button>
+      <t-button wx:elif="{{recorderState === 'recording'}}" size="small" theme="danger" bind:tap="stopRecording">停止录音</t-button>
+      <t-button wx:else size="small" disabled loading>正在评测</t-button>
+      <t-button size="small" variant="outline" bind:tap="practiceChat">💬 和我练</t-button>
+    </view>
+
+    <view class="pronunciation-card">
+      <text>{{recorderMessage}}</text>
+      <view wx:if="{{pronunciationResult}}" class="score-row">
+        <text class="score">{{pronunciationResult.overall_score}} 分</text>
+        <text>准确 {{pronunciationResult.accuracy_score}} · 流利 {{pronunciationResult.fluency_score}}</text>
+        <text>{{pronunciationResult.feedback}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{(state === 'unclear' || state === 'unsuitable') && result}}" class="notice-card result-notice">
+    <text>{{result.message_zh}}</text>
+    <t-button theme="primary" bind:tap="retake">再拍一张</t-button>
+  </view>
+
+  <view wx:if="{{state === 'error'}}" class="notice-card result-notice">
+    <text>{{errorMessage || '照片暂时没有看清，请换一张再试。'}}</text>
+    <t-button theme="primary" bind:tap="retake">再拍一张</t-button>
+  </view>
+  <text wx:if="{{errorMessage && state === 'ok'}}" class="error-message">{{errorMessage}}</text>
+</view>

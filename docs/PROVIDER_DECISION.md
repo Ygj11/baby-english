@@ -110,7 +110,50 @@ MiniMax adapter 保留但不再是默认 TTS，也不纳入当前成功条件。
 
 ---
 
-## 5. Architecture Boundary
+## 5. 默认 Vision — Qwen
+
+```env
+VISION_PROVIDER=qwen
+VISION_MODEL=qwen3.7-flash
+VISION_TIMEOUT=60
+```
+
+Vision 复用第 1 节的北京 Workspace、API Key 与 OpenAI-compatible endpoint。
+`qwen3.7-flash` 接收归一化 JPEG Base64 Data URI；OpenAI SDK `parse` 直接传入
+Pydantic schema，产生 `type=json_schema`、`strict=true` 的结构化请求，domain guard 再做
+长度、词形、重复和明显隐私数据校验。不添加 DashScope Vision SDK、OSS、provider
+router、fallback 或 A/B。
+
+官方参考：
+
+- https://help.aliyun.com/zh/model-studio/qwen3-7-flash
+- https://help.aliyun.com/zh/model-studio/qwen-structured-output
+- https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions
+
+---
+
+## 6. 默认 Textbook Embedding — Qwen
+
+```env
+EMBEDDING_PROVIDER=qwen
+EMBEDDING_MODEL=qwen3.7-text-embedding
+EMBEDDING_DIMENSIONS=1024
+EMBEDDING_TIMEOUT=60
+```
+
+教材向量化复用第 1 节北京 Workspace、Key 与 OpenAI-compatible endpoint。LlamaIndex
+`OpenAIEmbedding` 显式设置自定义 `model_name`、1024 dimensions 和最大 20 条 batch；
+默认离线测试显式使用 `MockEmbedding`，production 禁止 Fake。LlamaIndex 不管理回答 LLM，
+grounded answer 继续调用已有 `LLMGateway`。
+
+官方参考：
+
+- https://help.aliyun.com/zh/model-studio/embedding
+- https://help.aliyun.com/zh/model-studio/qwen3-7-text-embedding
+
+---
+
+## 7. Architecture Boundary
 
 Tasks 012–015 属于：
 
@@ -137,7 +180,7 @@ Pipecat 继续保留给后续：
 
 ---
 
-## 6. Retained Adapters
+## 8. Retained Adapters
 
 - DeepSeek：`LLM_PROVIDER=openai_compatible`，保留原 `OPENAI_*` 配置；
 - MiniMax：`TTS_PROVIDER=minimax`，保留原 `MINIMAX_*` 配置；
@@ -145,7 +188,7 @@ Pipecat 继续保留给后续：
 
 ---
 
-## 7. Secrets
+## 9. Secrets
 
 真实 Key 只放：
 

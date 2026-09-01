@@ -38,6 +38,7 @@ async def test_real_qwen_text_and_five_voice_turns(
     transport = httpx.ASGITransport(app=app)
     latency_rows: list[dict[str, int]] = []
     first_voice_response = None
+    client_headers = {"X-Client-Id": "real_qwen_e2e_client_00000001"}
 
     try:
         async with httpx.AsyncClient(
@@ -45,32 +46,31 @@ async def test_real_qwen_text_and_five_voice_turns(
             base_url="http://test",
             timeout=240,
         ) as client:
+            profile_response = await client.put(
+                "/api/student/profile",
+                headers=client_headers,
+                json={"age": 8, "grade": 3, "english_level": "beginner"},
+            )
+            assert profile_response.status_code == 200
             chat_response = await client.post(
                 "/api/tutor/chat",
                 json={
                     "message": "苹果英文怎么说？",
-                    "student": {
-                        "age": 8,
-                        "grade": 3,
-                        "english_level": "beginner",
-                    },
                     "context": {"mode": "chat"},
                 },
+                headers=client_headers,
             )
             assert chat_response.status_code == 200
             chat_data = chat_response.json()
             assert chat_data["reply"].strip()
             assert chat_data["reply"] != FakeLLM().fixed_reply
+            assert chat_data["repeat_text"]
             assert chat_data["suggested_actions"] == ["repeat", "explain_zh"]
 
             for _ in range(5):
                 response = await client.post(
                     "/api/voice/turn",
-                    data={
-                        "age": "8",
-                        "grade": "3",
-                        "english_level": "beginner",
-                    },
+                    headers=client_headers,
                     files={
                         "file": (
                             audio_path.name,
@@ -87,6 +87,7 @@ async def test_real_qwen_text_and_five_voice_turns(
                 assert voice_data["transcript"] != FakeSTT().fixed_text
                 assert voice_data["reply"].strip()
                 assert voice_data["reply"] != FakeLLM().fixed_reply
+                assert voice_data["repeat_text"]
                 assert voice_data["audio_url"].startswith("/api/voice/media/")
                 assert "base64" not in response.text.lower()
                 assert "aliyuncs.com" not in response.text

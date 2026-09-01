@@ -1,0 +1,19 @@
+@import "../../components/foundation/tokens.wxss";
+
+.page { min-height: 100vh; padding: 36rpx var(--be-space-lg); background: #f5f7ff; }
+.book-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24rpx; }
+.book-heading { display: flex; flex: 1; flex-direction: column; }
+.eyebrow { color: #5b6ee1; font-size: 23rpx; font-weight: 600; }
+.title { margin-top: 6rpx; color: #172033; font-size: 40rpx; font-weight: 700; }
+.subtitle { margin-top: 8rpx; color: #697386; font-size: 24rpx; }
+.switch-link { padding: 10rpx 0 10rpx 22rpx; color: #5b6ee1; font-size: 25rpx; }
+.unit-picker, .question-card, .answer-card, .notice-card { margin-bottom: 22rpx; padding: 28rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(48, 65, 135, .08); }
+.unit-picker { display: flex; justify-content: space-between; color: #303849; font-size: 27rpx; }
+.question-card, .answer-card, .notice-card { display: flex; flex-direction: column; gap: 22rpx; }
+.section-title { color: #172033; font-size: 31rpx; font-weight: 700; }
+.chips, .sources { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.chip, .source-chip { padding: 10rpx 18rpx; border-radius: 999rpx; background: #eef0ff; color: #4d5fc7; font-size: 23rpx; }
+.question-input { box-sizing: border-box; width: 100%; height: 180rpx; padding: 22rpx; border: 2rpx solid #e5e8ef; border-radius: 18rpx; background: #fafbff; font-size: 27rpx; }
+.answer-text { color: #303849; font-size: 29rpx; line-height: 1.7; white-space: pre-wrap; }
+.status-text { display: block; padding: 40rpx 0; text-align: center; color: #697386; }
+.status-text--error { color: #b42318; }

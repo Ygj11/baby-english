@@ -42,6 +42,7 @@ async def post_audio(
         ) as client:
             return await client.post(
                 "/api/voice/transcribe",
+                headers={"X-Client-Id": "test_transcribe_client_00000001"},
                 files={"file": (filename, content, content_type)},
             )
     finally:

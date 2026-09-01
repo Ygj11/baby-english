@@ -1,0 +1,44 @@
+<view class="page">
+  <text wx:if="{{loading}}" class="status-text">正在打开课本…</text>
+  <view wx:elif="{{profileRequired}}" class="notice-card">
+    <text>先完成学习设置，再开始课本学习。</text>
+    <t-button size="small" theme="primary" bind:tap="goToProfile">去设置</t-button>
+  </view>
+  <view wx:elif="{{textbook}}">
+    <view class="book-header">
+      <view class="book-heading">
+        <text class="eyebrow">当前课本</text>
+        <text class="title">{{textbook.title}}</text>
+        <text class="subtitle">{{textbook.publisher}} · {{textbook.grade}} 年级第 {{textbook.semester}} 学期</text>
+      </view>
+      <text class="switch-link" bind:tap="chooseAnotherBook">换一本</text>
+    </view>
+
+    <picker wx:if="{{units.length}}" mode="selector" range="{{units}}" range-key="title" value="{{unitIndex}}" bindchange="changeUnit">
+      <view class="unit-picker">
+        <text>{{unitIndex >= 0 ? units[unitIndex].title : '选择学习单元（可选）'}}</text>
+        <text>⌄</text>
+      </view>
+    </picker>
+
+    <view class="question-card">
+      <text class="section-title">问问这本课本</text>
+      <view class="chips">
+        <text wx:for="{{questionChips}}" wx:key="*this" class="chip" data-question="{{item}}" bind:tap="useQuestionChip">{{item}}</text>
+      </view>
+      <textarea class="question-input" maxlength="500" placeholder="输入关于当前课本的问题" value="{{question}}" bindinput="onQuestionInput" />
+      <t-button theme="primary" loading="{{asking}}" disabled="{{asking || !question}}" block bind:tap="askQuestion">{{asking ? '正在课本里找答案…' : '提问'}}</t-button>
+    </view>
+
+    <view wx:if="{{answer}}" class="answer-card">
+      <text class="section-title">课本答案</text>
+      <text class="answer-text">{{answer.answer}}</text>
+      <view wx:if="{{answer.sources.length}}" class="sources">
+        <text wx:for="{{answer.sources}}" wx:key="index" class="source-chip">
+          Unit {{item.unit_no}}{{item.lesson ? ' · ' + item.lesson : ''}}{{item.page ? ' · P' + item.page : ''}}
+        </text>
+      </view>
+    </view>
+  </view>
+  <text wx:if="{{errorMessage}}" class="status-text status-text--error">{{errorMessage}}</text>
+</view>

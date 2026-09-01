@@ -1,0 +1,33 @@
+<view class="page">
+  <view class="header">
+    <text class="title">选择你的英语课本</text>
+    <text class="subtitle">目录来自老师已经准备好的教材索引。</text>
+  </view>
+
+  <view wx:if="{{profileRequired}}" class="notice-card">
+    <text>先完成学习设置，才能选择适合你的课本。</text>
+    <t-button size="small" theme="primary" bind:tap="goToProfile">去设置</t-button>
+  </view>
+  <text wx:elif="{{loading}}" class="status-text">正在加载课本…</text>
+  <text wx:elif="{{errorMessage}}" class="status-text status-text--error">{{errorMessage}}</text>
+  <view wx:elif="{{!books.length}}" class="empty-card">
+    <text class="empty-title">暂时还没有可用课本</text>
+    <text class="empty-copy">请让老师先在服务端导入教材。</text>
+  </view>
+
+  <view
+    wx:for="{{books}}"
+    wx:key="id"
+    class="book-card {{item.selected ? 'book-card--selected' : ''}}"
+    data-textbook-id="{{item.id}}"
+    bind:tap="chooseBook"
+  >
+    <text class="book-icon">📖</text>
+    <view class="book-main">
+      <text class="book-title">{{item.title}}</text>
+      <text class="book-meta">{{item.publisher}} · {{item.series}}</text>
+      <text class="book-meta">{{item.grade}} 年级 · 第 {{item.semester}} 学期 · {{item.version}}</text>
+    </view>
+    <text class="book-action">{{selectingId === item.id ? '选择中…' : (item.selected ? '继续' : '选择')}}</text>
+  </view>
+</view>

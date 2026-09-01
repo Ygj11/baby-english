@@ -64,18 +64,19 @@ Tasks：008–010
 
 ## Milestone 4 — Scenario English
 
-后续：
+Task 018 已实现的 MVP：
 
-- travel
-- restaurant
-- school
-- shopping
-- roleplay
-- correction
+- travel / restaurant / school / child-safe shopping 服务端目录
+- text + batch voice role-play
+- active-session conversation memory
+- structured scene goal progress
+- completion 后 raw transcript 删除
+
+每轮 correction、自定义场景、全局历史和长期记忆推断仍为后续能力。
 
 ## Milestone 5 — Pronunciation
 
-后续：
+Task 017 已实现的离线验收范围：
 
 - ISE
 - repeat UI
@@ -93,11 +94,16 @@ VLM
 
 ## Milestone 7 — Textbook
 
-- textbook model
-- first PEP book
-- LlamaIndex
-- metadata
-- QA
+Task 020 已实现的基础范围：
+
+- SQLAlchemy textbook/unit/client selection metadata
+- repo 外结构化 source package 与安全 CLI ingestion
+- LlamaIndex chunk/index/persistence/Unit-filtered retrieval
+- Qwen 1024 维 embedding + existing Qwen LLM grounded QA
+- 服务端目录与小程序课本/Unit/问答页面
+
+仓库未捆绑第一本真实 PEP 教材；PDF/OCR、拍照匹配教材页、quiz、wordbook 和教材语音链路
+仍属于后续 task。
 
 ## Milestone 8 — Photo + Textbook
 

@@ -3,7 +3,8 @@
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from collections.abc import Sequence
+from typing import Any, Literal, Protocol
 
 from openai import AsyncOpenAI, OpenAIError
 
@@ -21,8 +22,26 @@ class LLMConfigurationError(LLMError):
     """Raised when the configured provider has no installed adapter."""
 
 
+@dataclass(frozen=True, slots=True)
+class LLMMessage:
+    role: Literal["user", "assistant"]
+    content: str
+
+    def __post_init__(self) -> None:
+        if self.role not in {"user", "assistant"}:
+            raise ValueError("LLM history accepts only user and assistant roles.")
+        if not self.content.strip():
+            raise ValueError("LLM history content cannot be blank.")
+
+
 class LLMGateway(Protocol):
-    async def generate(self, *, system_prompt: str, message: str) -> str:
+    async def generate(
+        self,
+        *,
+        system_prompt: str,
+        message: str,
+        history: Sequence[LLMMessage] = (),
+    ) -> str:
         """Generate one tutor response."""
 
 
@@ -30,9 +49,17 @@ class LLMGateway(Protocol):
 class FakeLLM:
     """Deterministic no-key LLM used by the local baseline and tests."""
 
-    fixed_reply: str = "Apple 🍎. Repeat after me: apple."
+    fixed_reply: str = "Apple 🍎. Repeat after me: apple"
 
-    async def generate(self, *, system_prompt: str, message: str) -> str:
+    async def generate(
+        self,
+        *,
+        system_prompt: str,
+        message: str,
+        history: Sequence[LLMMessage] = (),
+    ) -> str:
+        if "role-play partner" in system_prompt:
+            return "Great! What would you like to try next?"
         return self.fixed_reply
 
 
@@ -43,14 +70,22 @@ class OpenAICompatibleLLM:
     model: str
     client: Any = field(repr=False)
 
-    async def generate(self, *, system_prompt: str, message: str) -> str:
+    async def generate(
+        self,
+        *,
+        system_prompt: str,
+        message: str,
+        history: Sequence[LLMMessage] = (),
+    ) -> str:
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(
+            {"role": item.role, "content": item.content} for item in history
+        )
+        messages.append({"role": "user", "content": message})
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": message},
-                ],
+                messages=messages,
             )
         except (OpenAIError, TimeoutError) as error:
             raise LLMError("The LLM provider request failed.") from error

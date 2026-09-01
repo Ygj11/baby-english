@@ -1,7 +1,13 @@
 {
   "pages": [
     "pages/home/index",
-    "pages/chat/index"
+    "pages/chat/index",
+    "pages/profile/index",
+    "pages/scenarios/index",
+    "pages/scenario/index",
+    "pages/photo/index",
+    "pages/textbooks/index",
+    "pages/textbook/index"
   ],
   "window": {
     "navigationBarTitleText": "Baby English",

@@ -22,6 +22,9 @@ from server.app.voice.tts import (
     create_tts,
 )
 
+CLIENT_HEADERS = {"X-Client-Id": "test_voice_client_000000000001"}
+PROFILE = {"age": 8, "grade": 3, "english_level": "beginner"}
+
 
 class RecordingSTT:
     def __init__(self) -> None:
@@ -47,7 +50,7 @@ class RecordingLLM:
     async def generate(self, *, system_prompt: str, message: str) -> str:
         self.message = message
         self.system_prompt = system_prompt
-        return "Apple 🍎. Repeat after me: apple."
+        return "Apple 🍎. Repeat after me: apple"
 
 
 class FailingLLM(RecordingLLM):
@@ -107,9 +110,14 @@ async def test_batch_voice_turn_runs_stt_tutor_llm_tts_and_media(
             transport=transport,
             base_url="http://test",
         ) as client:
+            assert (
+                await client.put(
+                    "/api/student/profile", headers=CLIENT_HEADERS, json=PROFILE
+                )
+            ).status_code == 200
             response = await client.post(
                 "/api/voice/turn",
-                data={"age": "8", "grade": "3", "english_level": "beginner"},
+                headers=CLIENT_HEADERS,
                 files={"file": ("recording.mp3", b"mock audio", "audio/mpeg")},
             )
             audio_response = await client.get(response.json()["audio_url"])
@@ -120,7 +128,8 @@ async def test_batch_voice_turn_runs_stt_tutor_llm_tts_and_media(
     assert response.status_code == 200
     assert response.json() == {
         "transcript": "苹果英文怎么说",
-        "reply": "Apple 🍎. Repeat after me: apple.",
+        "reply": "Apple 🍎. Repeat after me: apple",
+        "repeat_text": "apple",
         "audio_url": response.json()["audio_url"],
         "suggested_actions": ["listen", "repeat", "explain_zh"],
     }
@@ -132,7 +141,7 @@ async def test_batch_voice_turn_runs_stt_tutor_llm_tts_and_media(
     assert not stt.audio_path.exists()
     assert llm.message == "苹果英文怎么说"
     assert "beginner" in llm.system_prompt
-    assert tts.text == "Apple 🍎. Repeat after me: apple."
+    assert tts.text == "Apple 🍎. Repeat after me: apple"
     assert "voice_turn_latency stt_ms=" in caplog.text
     assert "苹果英文怎么说" not in caplog.text
     assert "Apple 🍎" not in caplog.text
@@ -158,9 +167,14 @@ async def test_voice_turn_provider_failure_is_safe_and_cleans_temp(
             transport=transport,
             base_url="http://test",
         ) as client:
+            assert (
+                await client.put(
+                    "/api/student/profile", headers=CLIENT_HEADERS, json=PROFILE
+                )
+            ).status_code == 200
             response = await client.post(
                 "/api/voice/turn",
-                data={"age": "8", "grade": "3", "english_level": "beginner"},
+                headers=CLIENT_HEADERS,
                 files={"file": ("recording.mp3", b"mock audio", "audio/mpeg")},
             )
     finally:
@@ -205,9 +219,14 @@ async def test_voice_turn_stt_and_llm_failures_are_safe_and_clean_temp(
             transport=transport,
             base_url="http://test",
         ) as client:
+            assert (
+                await client.put(
+                    "/api/student/profile", headers=CLIENT_HEADERS, json=PROFILE
+                )
+            ).status_code == 200
             response = await client.post(
                 "/api/voice/turn",
-                data={"age": "8", "grade": "3", "english_level": "beginner"},
+                headers=CLIENT_HEADERS,
                 files={"file": ("recording.mp3", b"mock audio", "audio/mpeg")},
             )
     finally:
@@ -253,30 +272,21 @@ async def test_temporary_media_expires_and_is_deleted(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [("age", "4"), ("age", "16"), ("grade", "0"), ("grade", "10")],
-)
-async def test_voice_turn_rejects_invalid_student_range_before_stt(
+async def test_voice_turn_missing_profile_returns_409_before_all_providers(
     tmp_path: Path,
-    field: str,
-    value: str,
 ) -> None:
     stt = RecordingSTT()
+    llm = RecordingLLM()
+    tts = RecordingTTS()
     store = TemporaryMediaStore(base_dir=tmp_path)
     set_voice_overrides(
         stt=stt,
-        llm=RecordingLLM(),
-        tts=RecordingTTS(),
+        llm=llm,
+        tts=tts,
         store=store,
     )
     transport = httpx.ASGITransport(app=app)
-    form_data = {
-        "age": "8",
-        "grade": "3",
-        "english_level": "beginner",
-        field: value,
-    }
+    missing_headers = {"X-Client-Id": "test_voice_missing_0000000001"}
 
     try:
         async with httpx.AsyncClient(
@@ -285,12 +295,14 @@ async def test_voice_turn_rejects_invalid_student_range_before_stt(
         ) as client:
             response = await client.post(
                 "/api/voice/turn",
-                data=form_data,
+                headers=missing_headers,
                 files={"file": ("recording.mp3", b"mock audio", "audio/mpeg")},
             )
     finally:
         app.dependency_overrides.clear()
         store.cleanup()
 
-    assert response.status_code == 422
+    assert response.status_code == 409
     assert stt.audio_path is None
+    assert llm.message == ""
+    assert tts.text == ""

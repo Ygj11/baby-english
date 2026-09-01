@@ -1,0 +1,54 @@
+<view class="session-page">
+  <text wx:if="{{loading}}" class="status-text">正在进入场景…</text>
+  <view wx:elif="{{scene}}">
+    <view class="scene-header">
+      <text class="scene-title">{{scene.icon}} {{scene.title_zh}}</text>
+      <text class="scene-partner">你的伙伴：{{scene.partner_role}}</text>
+    </view>
+
+    <view class="goal-list">
+      <view wx:for="{{scene.goals}}" wx:key="id" class="goal-card goal-card--{{item.completed ? 'done' : 'todo'}}">
+        <view class="goal-copy">
+          <text class="goal-title">{{item.completed ? '✅' : '⬜'}} {{item.title_zh}}</text>
+          <text class="goal-phrase">{{item.practice_phrase}}</text>
+          <text class="goal-hint">{{item.hint_zh}}</text>
+        </view>
+        <t-button size="small" variant="outline" data-phrase="{{item.practice_phrase}}" bind:tap="practiceGoal">🎤 跟读这句</t-button>
+      </view>
+    </view>
+
+    <scroll-view class="conversation" scroll-y>
+      <t-chat-message wx:for="{{messages}}" wx:key="id" chat-id="{{item.id}}" role="{{item.role}}" placement="{{item.placement}}" name="{{item.name}}" status="{{item.status}}" content="{{item.content}}" />
+      <t-chat-message wx:if="{{sending && !completed}}" chat-id="scenario-loading" role="assistant" placement="left" name="场景伙伴" status="pending" />
+    </scroll-view>
+
+    <view wx:if="{{pronunciationTarget}}" class="pronunciation-card">
+      <text class="goal-title">跟读：{{pronunciationTarget}}</text>
+      <view wx:if="{{pronunciationResult}}">
+        <text class="pronunciation-score">{{pronunciationResult.overall_score}} 分</text>
+        <text class="goal-hint">准确 {{pronunciationResult.accuracy_score}} · 流利 {{pronunciationResult.fluency_score}}</text>
+        <text class="goal-hint">{{pronunciationResult.feedback}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{completion}}" class="completion-card">
+      <text class="completion-title">练习完成 🎉</text>
+      <text>{{completion.summary}}</text>
+      <text class="completion-tip">小提示：{{completion.tip}}</text>
+      <text>场景进度 {{completion.progress.completed_count}}/{{completion.progress.total_count}}</text>
+    </view>
+
+    <text wx:if="{{errorMessage}}" class="error-message">{{errorMessage}}</text>
+    <view wx:if="{{!completed}}" class="recorder-panel">
+      <text>{{recorderMessage}}</text>
+      <t-button wx:if="{{recorderState === 'idle' || recorderState === 'error'}}" theme="primary" bind:tap="startVoice">🎤 说一句</t-button>
+      <t-button wx:elif="{{recorderState === 'recording'}}" theme="danger" bind:tap="stopRecording">停止录音</t-button>
+      <t-button wx:else disabled loading>正在处理</t-button>
+    </view>
+    <t-button wx:if="{{!completed}}" block variant="outline" disabled="{{sending || (recorderState !== 'idle' && recorderState !== 'error')}}" bind:tap="completeSession">完成练习</t-button>
+    <view wx:if="{{!completed}}" class="sender-wrap">
+      <t-chat-sender value="{{draft}}" disabled="{{sending || (recorderState !== 'idle' && recorderState !== 'error')}}" placeholder="输入你想说的英语" bind:change="onInputChange" bind:send="onSend" />
+    </view>
+  </view>
+  <text wx:if="{{errorMessage && !scene}}" class="error-message">{{errorMessage}}</text>
+</view>

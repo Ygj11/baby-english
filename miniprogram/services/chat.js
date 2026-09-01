@@ -3,11 +3,6 @@ const api = require("./api");
 function sendMessage(message) {
   return api.post("/api/tutor/chat", {
     message,
-    student: {
-      age: 8,
-      grade: 3,
-      english_level: "beginner"
-    },
     context: {
       mode: "chat"
     }

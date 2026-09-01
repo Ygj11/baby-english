@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "场景英语",
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}

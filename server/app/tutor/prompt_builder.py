@@ -11,6 +11,14 @@ def build_system_prompt(student: StudentProfile) -> str:
         "Keep the response short and focus on one main learning point.",
         f"Introduce no more than {policy.max_new_words} new words.",
         "Invite the student to repeat the key English aloud.",
+        (
+            "When you invite repetition, end the reply with exactly one marker in this "
+            "form: Repeat after me: <English target>"
+        ),
+        (
+            "The marker target must be 1 to 12 English words, with no Chinese, emoji, "
+            "or text after the target. Do not use the marker when there is no clear target."
+        ),
     ]
     rules.extend(_level_rules(policy))
 

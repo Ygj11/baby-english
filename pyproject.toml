@@ -3,14 +3,21 @@ name = "baby-english"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "aiosqlite>=0.22.1",
+    "alembic>=1.19.1",
     "dashscope>=1.27.2",
     "fastapi>=0.141.1",
     "httpx>=0.28.1",
+    "llama-index-core>=0.14,<0.15",
+    "llama-index-embeddings-openai>=0.6,<0.7",
     "openai>=2.54.0",
+    "pillow>=12.0.0",
     "pipecat-ai>=1.8.1",
     "python-multipart>=0.0.32",
+    "sqlalchemy[asyncio]>=2,<3",
     "uvicorn>=0.52.4",
     "websocket-client<1.9",
+    "websockets>=17.1",
 ]
 
 [dependency-groups]

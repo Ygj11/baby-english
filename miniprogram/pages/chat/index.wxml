@@ -1,4 +1,12 @@
 <view class="chat-page">
+  <view wx:if="{{profileRequired}}" class="profile-guide">
+    <text class="profile-guide__title">先完成学习设置吧</text>
+    <text class="profile-guide__body">告诉 AI Tutor 你的年级和英语水平，回答会更适合你。</text>
+    <t-button size="small" theme="primary" bind:tap="goToProfile">
+      去设置
+    </t-button>
+  </view>
+
   <scroll-view class="message-list" scroll-y>
     <t-chat-message
       wx:for="{{messages}}"
@@ -39,6 +47,33 @@
         {{item.label}}
       </t-button>
     </view>
+
+    <view wx:if="{{pronunciationTarget}}" class="pronunciation-card">
+      <text class="pronunciation-card__label">跟读目标</text>
+      <text class="pronunciation-card__target">{{pronunciationTarget}}</text>
+      <view wx:if="{{pronunciationResult}}" class="pronunciation-card__result">
+        <text class="pronunciation-card__overall">{{pronunciationResult.overall_score}} 分</text>
+        <text>准确 {{pronunciationResult.accuracy_score}}</text>
+        <text>流利 {{pronunciationResult.fluency_score}}</text>
+        <text wx:if="{{pronunciationResult.completeness_score !== null}}">
+          完整 {{pronunciationResult.completeness_score}}
+        </text>
+        <text class="pronunciation-card__feedback">{{pronunciationResult.feedback}}</text>
+        <view wx:if="{{pronunciationResult.words.length}}" class="pronunciation-words">
+          <text wx:for="{{pronunciationResult.words}}" wx:key="word" class="pronunciation-word">
+            {{item.word}} {{item.score === null ? '—' : item.score}}
+          </text>
+        </view>
+        <t-button
+          size="small"
+          variant="outline"
+          disabled="{{recorderState !== 'idle' && recorderState !== 'error'}}"
+          bind:tap="startPronunciation"
+        >
+          🎤 再读一次
+        </t-button>
+      </view>
+    </view>
   </scroll-view>
 
   <view class="recorder-panel">
@@ -49,6 +84,7 @@
       wx:if="{{recorderState === 'idle' || recorderState === 'error'}}"
       block
       theme="primary"
+      disabled="{{profileRequired || profileStatus === 'checking'}}"
       bind:tap="startRecording"
     >
       🎤 {{recorderState === 'error' ? '重新录音' : '开始录音'}}
@@ -71,7 +107,7 @@
   <view class="sender-wrap">
     <t-chat-sender
       value="{{draft}}"
-      disabled="{{loading || actionLoading}}"
+      disabled="{{loading || actionLoading || profileRequired || profileStatus === 'checking'}}"
       placeholder="输入你想学的英语"
       render-presets="{{senderActions}}"
       bind:change="onInputChange"
